@@ -301,7 +301,7 @@ export async function getJobsActivas() {
 export async function sumarLiberadoAJOB(jobId) {
   try {
     const db = getFirestore();
-    const jobRef = doc(db, "jobs", jobId);
+    const jobRef = doc(db, "JOBS", jobId);
 
     await updateDoc(jobRef, {
       liberados: increment(1),

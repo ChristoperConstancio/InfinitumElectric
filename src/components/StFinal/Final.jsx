@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { addLiberados, existeEnAnalizados, getJobsActivas } from "../../customHooks/RFQ";
+import { addLiberados, existeEnAnalizados, getJobsActivas, sumarLiberadoAJOB } from "../../customHooks/RFQ";
 import AlertMessage from "../Alertas/AlertMessage";
 
 function FinalStation() {
@@ -49,7 +49,8 @@ function FinalStation() {
         fecha: fechaHoraMX, // fecha + hora juntas
         recuperado: recuperado ? "Si" : "No",
       };
-      const isOk = await addLiberados(payload)
+      const isOk = await addLiberados(payload);
+
       if (isOk) {
         setAlert({
           type: "success",
@@ -65,7 +66,6 @@ function FinalStation() {
           });
           return;
         }
-
         setAlert({
           show: true,
           type: "success",
@@ -98,7 +98,6 @@ function FinalStation() {
   useEffect(() => {
     const cargarJobs = async () => {
       const data = await getJobsActivas();
-      console.log(data)
       setJobsActivas(data);
     };
 
