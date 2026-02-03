@@ -24,7 +24,8 @@ function Bienvenido() {
             "Analisis",
             "Final",
             "Envios",
-            "JOB"
+            "JOB",
+            "Dashboard"
           ]);
           break;
 
@@ -39,7 +40,8 @@ function Bienvenido() {
           break;
         case "3":
           setApartments([
-            "Envios",
+            "Desensamble",
+            "Analisis"
           ]);
           break;
 
