@@ -1,5 +1,5 @@
 import React from 'react'
-import logo from '../assets/INFINITUM.jpg'
+import logo from '../assets/rayo.png'
 import shut from '../assets/shutdown.png'
 import back from '../assets/left-arrow.png'
 import { useNavigate, Link } from 'react-router-dom'
@@ -28,13 +28,7 @@ function HeaderB({ setIsAuthenticated }) {
   ">
       {/* ⬅️ Logo + Back */}
       <div className="flex items-center gap-2 md:gap-3">
-        <button onClick={goBack}>
-          <img
-            src={back}
-            alt="Back"
-            className="h-4 w-4 md:h-5 md:w-5"
-          />
-        </button>
+
 
         <Link to={"/bienvenido"}>
           <img

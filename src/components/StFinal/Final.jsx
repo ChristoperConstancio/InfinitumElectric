@@ -56,6 +56,7 @@ function FinalStation() {
           type: "success",
           message: "Motor liberado correctamente",
         });
+        console.log(form.JOB)
         const okJob = await sumarLiberadoAJOB(form.JOB);
 
         if (!okJob) {
@@ -72,13 +73,13 @@ function FinalStation() {
           message: "Motor liberado y JOB actualizada",
         });
         // Limpia form
-        setForm({
+        setForm((prev) => ({
+          ...prev,
           SN_CATALOG: "",
           SN_MOTOR: "",
           SN_VFD: "",
           PLEX: "",
-        });
-        setLineaSeleccionada("");
+        }));
         return;
       }
 
