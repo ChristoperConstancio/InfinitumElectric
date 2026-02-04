@@ -88,18 +88,32 @@ export async function buscarVFD(id) {
 };
 
 export async function addRechazos(data) {
+  const db = getFirestore();
 
-    const db = getFirestore();
+  try {
+    // 1️⃣ Guardar en Rechazos
+    await addDoc(collection(db, "Rechazos"), data);
 
-    const optionsRef = collection(db, "Rechazos"); // Reemplaza "opciones" con el nombre de tu colección
-    try {
-        await addDoc(optionsRef, data);
-        return true;
-    } catch (error) {
-        alert('Error en la base de datos: al crear usuario ' + error)
-        return false;
+    // 2️⃣ Preparar FPY
+    const fechaMX = getFechaMX();       // ej. 03-02-2026          // L1 | L2 | L3 | LSA
+    const estacion = data.Estacion;     // MT | ST | FI
 
-    }
+    const campoFPY = `Rechazados${estacion}`;
+    // Ejemplo: RechazadosL1MT
+
+    const fpyRef = doc(db, "FPY", fechaMX);
+
+    // 3️⃣ Incrementar FPY
+    await updateDoc(fpyRef, {
+      [campoFPY]: increment(1)
+    });
+
+    return true;
+
+  } catch (error) {
+    alert("Error en la base de datos: " + error);
+    return false;
+  }
 }
 export async function addAnalizados(data) {
 
@@ -116,20 +130,56 @@ export async function addAnalizados(data) {
     }
 }
 
-export async function addLiberados(data) {
 
+async function getLiberadosHoy(startOfDay) {
     const db = getFirestore();
 
-    const optionsRef = collection(db, "Liberados"); // Reemplaza "opciones" con el nombre de tu colección
-    try {
-        await addDoc(optionsRef, data);
-        return true;
-    } catch (error) {
-        alert('Error en la base de datos: al crear usuario ' + error)
-        return false;
+    const q = query(
+        collection(db, "Liberados"),
+        where("fecha", ">=", startOfDay)
+    );
 
-    }
+    const snapshot = await getDocs(q);
+    return snapshot.size;
 }
+function getFechaMX() {
+  return new Date()
+    .toLocaleDateString("es-MX", {
+      timeZone: "America/Mexico_City"
+    })
+    .replaceAll("/", "-");
+}
+
+export async function addLiberados(data) {
+  const db = getFirestore();
+
+  try {
+    // 1️⃣ Guardar en Liberados
+    await addDoc(collection(db, "Liberados"), data);
+
+    // 2️⃣ Preparar FPY
+    const fechaMX = getFechaMX();               // ej. 03-02-2026
+    const linea = data.linea;                   // L1 | L2 | L3
+    const campoFPY = `Liberados${linea}`;       // LiberadosL1, L2, L3
+    console.log(campoFPY)
+    console.log(linea)
+
+    const fpyRef = doc(db, "FPY", fechaMX);
+
+    // 3️⃣ Incrementar FPY
+    await updateDoc(fpyRef, {
+      [campoFPY]: increment(1)
+    });
+
+    return true;
+
+  } catch (error) {
+    alert("Error en la base de datos: " + error);
+    return false;
+  }
+}
+
+
 export async function inactivateRFQ(id) {
 
     // Obtén la referencia a la colección
@@ -280,36 +330,36 @@ export async function addJob(JOB, data) {
 export async function getJobsActivas() {
     const db = getFirestore();
 
-  try {
-    const q = query(
-      collection(db, "JOBS"),
-      where("Status", "==", "Abierta")
-    );
+    try {
+        const q = query(
+            collection(db, "JOBS"),
+            where("Status", "==", "Abierta")
+        );
 
-    const snapshot = await getDocs(q);
+        const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => ({
-      id: doc.id,      // 👈 la JOB
-      ...doc.data(),
-    }));
-  } catch (error) {
-    console.error("Error obteniendo JOBs:", error);
-    return [];
-  }
+        return snapshot.docs.map(doc => ({
+            id: doc.id,      // 👈 la JOB
+            ...doc.data(),
+        }));
+    } catch (error) {
+        console.error("Error obteniendo JOBs:", error);
+        return [];
+    }
 }
 
 export async function sumarLiberadoAJOB(jobId) {
-  try {
-    const db = getFirestore();
-    const jobRef = doc(db, "JOBS", jobId);
+    try {
+        const db = getFirestore();
+        const jobRef = doc(db, "JOBS", jobId);
 
-    await updateDoc(jobRef, {
-      liberados: increment(1),
-    });
+        await updateDoc(jobRef, {
+            liberados: increment(1),
+        });
 
-    return true;
-  } catch (error) {
-    console.error("Error al sumar liberado:", error);
-    return false;
-  }
+        return true;
+    } catch (error) {
+        console.error("Error al sumar liberado:", error);
+        return false;
+    }
 }
