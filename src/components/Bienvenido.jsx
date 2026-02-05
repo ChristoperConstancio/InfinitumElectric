@@ -36,7 +36,7 @@ function Bienvenido() {
             "Analisis",
             "Final",
             "JOB",
-            "Dasboard",
+            "Dashboard",
           ]);
           break;
         case "3":
