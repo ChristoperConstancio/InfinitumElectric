@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import add from '../../assets/add.png'
-import edit from '../../assets/editing.png'
-import remove from '../../assets/remove.png'
 import { Link } from 'react-router-dom'
 import { fetchRechazos, inactivarRechazos } from '../../customHooks/RFQ'
-import view from '../../assets/view.png'
-import getClientes from '../../customHooks/getClients'
 import { useNavigate } from 'react-router-dom'
 function RFQ() {
   const navigate = useNavigate();
@@ -20,23 +16,6 @@ function RFQ() {
     }
   };
 
-
-
-  const inactivarRegistros = async () => {
-    if (selectedRow == null || selectedRow == '') {
-      alert("selecciona un registro");
-      return false;
-    }
-    const okChecked = prompt(`Seguro que quieres eliminar ${selectedRow}, escribe OK`);
-    if (okChecked != 'OK') return false;
-    const isInactivate = await inactivarRechazos(selectedRow);
-    console.log(isInactivate)
-    if (isInactivate) {
-      const deleteUpdate = filteredData.filter(item => selectedRow != item.Id_rfq)
-      setFilteredData(deleteUpdate)
-      alert("Borrado completado");
-    }
-  }
   useEffect(() => {
     const getFallas = async () => {
       const data = await fetchRechazos();
@@ -45,7 +24,7 @@ function RFQ() {
       console.log(fechaFormateada)
       const filterData = data.filter(item =>
         item.Status == "Rechazado" &&
-        item.Fecha === fechaFormateada
+        item.Fecha === "2/4/2026"
       ); 
       console.log(filterData)
       setFilteredData(filterData);
@@ -78,14 +57,6 @@ function RFQ() {
             <img src={add} alt="Agregar" className="h-4 w-4" />
             <span className="text-sm font-semibold">Nuevo</span>
           </Link>
-
-          <button
-            onClick={inactivarRegistros}
-            className="bg-red-500 hover:bg-red-600 transition-all rounded-lg px-4 py-2 flex items-center space-x-2 shadow-md"
-          >
-            <img src={remove} alt="Eliminar" className="h-4 w-4" />
-            <span className="text-sm font-semibold">Eliminar</span>
-          </button>
 
         </div>
 
@@ -130,7 +101,7 @@ function RFQ() {
                     colSpan="5"
                     className="text-center py-6 text-gray-400 italic"
                   >
-                    No hay registros disponibles o selecciona una empresa.
+                    No hay registros disponibles 
                   </td>
                 </tr>
               )}

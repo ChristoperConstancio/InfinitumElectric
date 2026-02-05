@@ -88,33 +88,35 @@ export async function buscarVFD(id) {
 };
 
 export async function addRechazos(data) {
-  const db = getFirestore();
+    const db = getFirestore();
 
-  try {
-    // 1️⃣ Guardar en Rechazos
-    await addDoc(collection(db, "Rechazos"), data);
+    try {
+        // 1️⃣ Guardar en Rechazos
+        await addDoc(collection(db, "Rechazos"), data);
 
-    // 2️⃣ Preparar FPY
-    const fechaMX = getFechaMX();       // ej. 03-02-2026          // L1 | L2 | L3 | LSA
-    const estacion = data.Estacion;     // MT | ST | FI
+        // 2️⃣ Preparar FPY
+        const fechaMX = getFechaMX();       // ej. 03-02-2026          // L1 | L2 | L3 | LSA
+        const estacion = data.Estacion;     // MT | ST | FI
 
-    const campoFPY = `Rechazados${estacion}`;
-    // Ejemplo: RechazadosL1MT
+        const campoFPY = `Rechazados${estacion}`;
+        // Ejemplo: RechazadosL1MT
 
-    const fpyRef = doc(db, "FPY", fechaMX);
+        const fpyRef = doc(db, "FPY", fechaMX);
 
-    // 3️⃣ Incrementar FPY
-    await updateDoc(fpyRef, {
-      [campoFPY]: increment(1)
-    });
+        // 3️⃣ Incrementar FPY
+        await updateDoc(fpyRef, {
+            [campoFPY]: increment(1)
+        });
 
-    return true;
+        return true;
 
-  } catch (error) {
-    alert("Error en la base de datos: " + error);
-    return false;
-  }
+    } catch (error) {
+        alert("Error en la base de datos: " + error);
+        return false;
+    }
 }
+
+
 export async function addAnalizados(data) {
 
     const db = getFirestore();
@@ -129,8 +131,76 @@ export async function addAnalizados(data) {
 
     }
 }
+export async function createFPYDiario() {
+    const db = getFirestore();
 
+    // Fecha MX como ID del documento
+    const fechaMX = new Date()
+        .toLocaleDateString("es-MX", {
+            timeZone: "America/Mexico_City"
+        })
+        .replaceAll("/", "-");
+    console.log("creado")
+    const ref = doc(db, "FPY", fechaMX);
+    const snap = await getDoc(ref);
 
+    // Si ya existe, no hace nada
+    if (snap.exists()) {
+        return {
+            created: false,
+            id: fechaMX
+        };
+    }
+
+    // Crear documento FPY del día
+    await setDoc(ref, {
+        fecha: fechaMX,
+
+        // ---- LINEA 1 ----
+        LiberadosL1: 0,
+        RechazadosL1MT: 0,
+        RechazadosL1ST: 0,
+        RechazadosL1FI: 0,
+
+        // ---- LINEA 2 ----
+        LiberadosL2: 0,
+        RechazadosL2MT: 0,
+        RechazadosL2ST: 0,
+        RechazadosL2FI: 0,
+
+        // ---- LINEA 3 ----
+        LiberadosL3: 0,
+        RechazadosL3MT: 0,
+        RechazadosL3ST: 0,
+        RechazadosL3FI: 0,
+
+        // ---- LINEA SA ----
+        LiberadosLSA: 0,
+        RechazadosLSAMT: 0,
+        RechazadosLSAST: 0,
+        RechazadosLSAFI: 0,
+
+        createdBy: "FRONTEND",
+        createdAt: serverTimestamp()
+    });
+
+    return {
+        created: true,
+        id: fechaMX
+    };
+}
+export async function getFallas(){
+    const data = await fetchRechazos();
+    const hoy = new Date();
+    const fechaFormateada = hoy.toLocaleDateString("en-US");
+    console.log(fechaFormateada)
+    const filterData = data.filter(item =>
+        item.Status == "Rechazado" &&
+        item.Fecha === "2/4/2026"
+    );
+    return filterData;
+
+}
 async function getLiberadosHoy(startOfDay) {
     const db = getFirestore();
 
@@ -143,40 +213,40 @@ async function getLiberadosHoy(startOfDay) {
     return snapshot.size;
 }
 function getFechaMX() {
-  return new Date()
-    .toLocaleDateString("es-MX", {
-      timeZone: "America/Mexico_City"
-    })
-    .replaceAll("/", "-");
+    return new Date()
+        .toLocaleDateString("es-MX", {
+            timeZone: "America/Mexico_City"
+        })
+        .replaceAll("/", "-");
 }
 
 export async function addLiberados(data) {
-  const db = getFirestore();
+    const db = getFirestore();
 
-  try {
-    // 1️⃣ Guardar en Liberados
-    await addDoc(collection(db, "Liberados"), data);
+    try {
+        // 1️⃣ Guardar en Liberados
+        await addDoc(collection(db, "Liberados"), data);
 
-    // 2️⃣ Preparar FPY
-    const fechaMX = getFechaMX();               // ej. 03-02-2026
-    const linea = data.linea;                   // L1 | L2 | L3
-    const campoFPY = `Liberados${linea}`;       // LiberadosL1, L2, L3
-    console.log(campoFPY)
-    console.log(linea)
+        // 2️⃣ Preparar FPY
+        const fechaMX = getFechaMX();               // ej. 03-02-2026
+        const linea = data.linea;                   // L1 | L2 | L3
+        const campoFPY = `Liberados${linea}`;       // LiberadosL1, L2, L3
+        console.log(campoFPY)
+        console.log(linea)
 
-    const fpyRef = doc(db, "FPY", fechaMX);
+        const fpyRef = doc(db, "FPY", fechaMX);
 
-    // 3️⃣ Incrementar FPY
-    await updateDoc(fpyRef, {
-      [campoFPY]: increment(1)
-    });
+        // 3️⃣ Incrementar FPY
+        await updateDoc(fpyRef, {
+            [campoFPY]: increment(1)
+        });
 
-    return true;
+        return true;
 
-  } catch (error) {
-    alert("Error en la base de datos: " + error);
-    return false;
-  }
+    } catch (error) {
+        alert("Error en la base de datos: " + error);
+        return false;
+    }
 }
 
 

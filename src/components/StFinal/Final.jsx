@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { addLiberados, existeEnAnalizados, getJobsActivas, sumarLiberadoAJOB } from "../../customHooks/RFQ";
+import { addLiberados, createFPYDiario, existeEnAnalizados, getJobsActivas, sumarLiberadoAJOB } from "../../customHooks/RFQ";
 import AlertMessage from "../Alertas/AlertMessage";
 
 function FinalStation() {
@@ -18,6 +18,7 @@ function FinalStation() {
     JOB: jobsActivas,
   });
 
+  
   // 🔄 Manejo de inputs
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -99,7 +100,11 @@ useEffect(() => {
     const data = await getJobsActivas();
     setJobsActivas(data);
   };
-
+    async function initFPY() {
+    const res = await createFPYDiario();
+    console.log("FPY diario:", res);
+  }
+  initFPY();
   cargarJobs();
 }, []);
 return (

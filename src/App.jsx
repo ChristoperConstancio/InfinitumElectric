@@ -21,7 +21,7 @@ import BuscarRechazo from "./components/Desensamble/DesensambleView";
 import FormVFD from "./components/RFQs/RegistroVFDs";
 import CrearEnvio from "./components/EnviosSL1/CrearEnvio.jsx";
 import JOB from "./components/JOBS/CrearJOB.jsx";
-import TablaFPYSencilla from "./components/Reportes/Dashboard.jsx";
+import TablaFPY from "./components/Reportes/Dashboard.jsx";
 
 function ProtectedRoute({ isAuthenticated, children }) {
   if (!isAuthenticated) {
@@ -70,7 +70,7 @@ export default function App() {
                       <Route path="/reportes" element={<ReportesS />} />
                       <Route path="/Analisis" element={<FormVFD />} />
                       <Route path="/JOB" element={<JOB />} />
-                      <Route path="/Dashboard" element={<TablaFPYSencilla />} />
+                      <Route path="/Dashboard" element={<TablaFPY />} />
 
                     </Routes>
                   </main>
