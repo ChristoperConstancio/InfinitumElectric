@@ -34,15 +34,12 @@ function Bienvenido() {
             "Fallas",
             "Desensamble",
             "Analisis",
-            "Final",
-            "JOB",
             "Dashboard",
           ]);
           break;
         case "3":
           setApartments([
-            "Desensamble",
-            "Analisis"
+            "Dashboard"
           ]);
           break;
 
