@@ -35,6 +35,7 @@ function Bienvenido() {
             "Desensamble",
             "Analisis",
             "Dashboard",
+            "JOB",
           ]);
           break;
         case "3":
