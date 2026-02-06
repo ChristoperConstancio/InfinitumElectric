@@ -100,11 +100,7 @@ useEffect(() => {
     const data = await getJobsActivas();
     setJobsActivas(data);
   };
-    async function initFPY() {
-    const res = await createFPYDiario();
-    console.log("FPY diario:", res);
-  }
-  initFPY();
+
   cargarJobs();
 }, []);
 return (
@@ -150,7 +146,8 @@ return (
 
         {jobsActivas.map((job) => (
           <option key={job.id} value={job.id}>
-            {job.id} — {job.sku}
+            {job.id}
+            
           </option>
         ))}
       </select>

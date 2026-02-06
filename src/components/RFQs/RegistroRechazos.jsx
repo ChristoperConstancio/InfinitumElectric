@@ -27,8 +27,11 @@ function RegistroRechazos() {
   // Generar fecha actual en formato MM/DD/YYYY
   useEffect(() => {
     const hoy = new Date();
-    const fechaFormateada = hoy.toLocaleDateString("en-US"); // MM/DD/YYYY
-    setFormData((prev) => ({ ...prev, Fecha: fechaFormateada }));
+    const fechaHoraMX = now.toLocaleString("es-MX", {
+      timeZone: "America/Mexico_City",
+      hour12: false
+    });
+    setFormData((prev) => ({ ...prev, Fecha: fechaHoraMX }));
   }, []);
 
   const handleChange = (e) => {

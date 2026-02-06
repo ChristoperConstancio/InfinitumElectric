@@ -10,7 +10,12 @@ function BuscarRechazo() {
     const [alert, setAlert] = useState({ show: false, type: "", message: "" });
     const navigate = useNavigate();
 
-
+    const mostrarSerial = (nivel, tipo) => {
+        if (nivel === "Nivel 1") return ["MainBoard", "CIM"];
+        if (nivel === "Nivel 2") return ["MainBoard", "CIM", "Rotor", "Stator"];
+        if (nivel === "Nivel 3") return ["MainBoard", "CIM", "Rotor", "Stator"];
+        return [];
+    };
     const handleBuscar = async (e) => {
         e.preventDefault();
         const res = await fetchRechId(snMotor);
@@ -33,7 +38,7 @@ function BuscarRechazo() {
         };
         const dataUpdate = {
             ...resultado,
-            Status : "Analizado",
+            Status: "Analizado",
         }
         const isOk = await addAnalizados(nuevoResultado);
         await updateRechazo(dataUpdate)
@@ -164,7 +169,7 @@ function BuscarRechazo() {
 
                             {/* Select Nivel */}
                             <div>
-                                <label className="block text-sm font-medium mb-1 text-gray-300">Nivel</label>
+                                <label className="block text-sm font-medium mb-1 text-gray-300">Nivel de desensamble</label>
                                 <select
                                     value={resultado.Nivel || ""}
                                     onChange={(e) => setResultado({ ...resultado, Nivel: e.target.value })}
@@ -188,6 +193,26 @@ function BuscarRechazo() {
                                         </>
                                     )}
                                 </select>
+                                {mostrarSerial(resultado.Nivel, resultado.Tipo).map((item) => (
+                                    <div key={item}>
+                                        <label className="block text-sm font-medium mb-1 text-gray-300">
+                                            SN {item}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={resultado[`SN_${item}`] || ""}
+                                            onChange={(e) =>
+                                                setResultado({
+                                                    ...resultado,
+                                                    [`SN_${item}`]: e.target.value,
+                                                })
+                                            }
+                                            placeholder={`Ingrese SN ${item}`}
+                                            className="w-full bg-gray-200 text-black border border-gray-600 rounded-lg p-2 focus:ring-2 focus:ring-red-400 focus:outline-none"
+                                            required
+                                        />
+                                    </div>
+                                ))}
                             </div>
                         </div>
 

@@ -24,7 +24,7 @@ function RFQ() {
       console.log(fechaFormateada)
       const filterData = data.filter(item =>
         item.Status == "Rechazado" &&
-        item.Fecha === "2/4/2026"
+        item.Fecha === "2/5/2026"
       ); 
       console.log(filterData)
       setFilteredData(filterData);
