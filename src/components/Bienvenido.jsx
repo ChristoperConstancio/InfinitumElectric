@@ -16,7 +16,7 @@ function Bienvenido() {
       const tipoUsuario = localStorage.getItem("tipo");
 
       switch (tipoUsuario) {
-        case "1":
+         case "1":
           setApartments([
             "Usuarios",
             "Fallas",
@@ -25,8 +25,7 @@ function Bienvenido() {
             "Final",
             "Envios",
             "JOB",
-            "Dashboard",
-            "Record",
+            "Dashboard"
           ]);
           break;
 
@@ -35,9 +34,9 @@ function Bienvenido() {
             "Fallas",
             "Desensamble",
             "Analisis",
-            "Final",
+            "Dashboard",
             "JOB",
-            "Dashboard"
+            "Final",
           ]);
           break;
         case "3":
