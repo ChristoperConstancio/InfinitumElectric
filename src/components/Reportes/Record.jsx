@@ -79,7 +79,7 @@ export default function TablaFPYPorDia() {
                             {/* 🔥 FST SOLO GLOBAL ST */}
                             {est === "ST" && (
                                 <p className="text-sm text-green-400 font-semibold mt-1">
-                                    FST: {global.ST.fst}% 
+                                    Final System Test: {global.ST.fst}% 
                                 </p>
                             )}
                         </div>
