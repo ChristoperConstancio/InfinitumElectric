@@ -49,7 +49,7 @@ function Bienvenido() {
         case "4":
           setApartments([
             "Dashboard",
-            "Reporte"
+            "Record"
           ]);
           break;
         default:
