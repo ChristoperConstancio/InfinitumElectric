@@ -1,89 +1,94 @@
 import { useEffect, useState } from "react";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
-
-/* ================= CONFIG ================= */
-
-const lineas = ["L1", "L2", "L3", "LSA"];
-const estaciones = ["MT", "ST", "FI"];
-
-// DÍAS A MOSTRAR (ej. últimos 7 docs)
-const DIAS = 7;
-
-const getFechasMX = (dias) => {
-    const fechas = [];
-    const hoy = new Date();
-
-    for (let i = 0; i < dias; i++) {
-        const d = new Date(hoy);
-        d.setDate(hoy.getDate() - i);
-        fechas.push(
-            d.toLocaleDateString("es-MX", {
-                timeZone: "America/Mexico_City"
-            }).replaceAll("/", "-")
-        );
-    }
-
-    return fechas; // 🔴 NO reverse, NO semana
-};
-
-const calcularFPY = (liberados, rechazados) => {
-    const total = liberados + rechazados;
-    if (total === 0) return 100;
-    return +(liberados / total * 100).toFixed(1);
-};
-
-/* ================= COMPONENTE ================= */
+import { getFPYPorWeek, getFPYGlobalPorWeek } from "../../customHooks/RFQ";
 
 export default function TablaFPYPorDia() {
-    const db = getFirestore();
+    const [week, setWeek] = useState(1);
     const [rows, setRows] = useState([]);
+    const [global, setGlobal] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        cargarFPYDiario();
-    }, []);
+        cargar();
+    }, [week]);
 
-    const cargarFPYDiario = async () => {
-        const fechas = getFechasMX(DIAS);
-        const resultado = [];
+    const cargar = async () => {
+        setLoading(true);
+        setRows([]);
+        setGlobal(null);
 
-        for (const fecha of fechas) {
-            const ref = doc(db, "FPY", fecha);
-            const snap = await getDoc(ref);
+        try {
+            const dataTabla = await getFPYPorWeek(Number(week));
+            const dataGlobal = await getFPYGlobalPorWeek(Number(week));
 
-            if (!snap.exists()) continue; // solo días existentes
-
-            const fpy = snap.data();
-
-            let liberados = 0;
-            let rechazados = { MT: 0, ST: 0, FI: 0 };
-
-            lineas.forEach(l => {
-                liberados += fpy[`Liberados${l}`] || 0;
-                rechazados.MT += fpy[`Rechazados${l}MT`] || 0;
-                rechazados.ST += fpy[`Rechazados${l}ST`] || 0;
-                rechazados.FI += fpy[`Rechazados${l}FI`] || 0;
-            });
-
-            resultado.push({
-                fecha,
-                MT: calcularFPY(liberados, rechazados.MT),
-                ST: calcularFPY(liberados, rechazados.ST),
-                FI: calcularFPY(liberados, rechazados.FI),
-            });
+            setRows(Array.isArray(dataTabla) ? dataTabla : []);
+            setGlobal(dataGlobal ?? null);
+        } catch (err) {
+            console.error("Error cargando FPY:", err);
+            setRows([]);
+            setGlobal(null);
+        } finally {
+            setLoading(false);
         }
-
-        setRows(resultado);
     };
-
-    /* ================= RENDER ================= */
 
     return (
         <div className="p-6 bg-gray-900 rounded-xl shadow-xl space-y-6">
 
-            <h1 className="text-3xl font-bold text-white">
-                FPY Diario (% por día)
-            </h1>
+            {/* SELECT week */}
+            <div className="flex items-center gap-4">
+                <label className="text-sm text-gray-300 font-semibold">
+                    Week:
+                </label>
 
+                <select
+                    value={week}
+                    onChange={e => setWeek(Number(e.target.value))}
+                    className="bg-gray-800 text-white px-3 py-2 rounded-md border border-gray-600"
+                >
+                    {Array.from({ length: 53 }, (_, i) => i + 1).map(s => (
+                        <option key={s} value={s}>
+                            Week {s}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            {/* 🔥 GLOBAL week MT / ST / FI */}
+            {global && (
+                <div className="grid grid-cols-3 gap-4 bg-gray-800 p-4 rounded-xl">
+                    {["MT", "ST", "FI"].map(est => (
+                        <div key={est} className="text-center">
+                            <p className="text-sm text-gray-400">
+                                {est} · FPY Global Week {week}
+                            </p>
+
+                            <p
+                                className={`text-4xl font-bold
+            ${global[est].fpy < 95
+                                        ? "text-red-400"
+                                        : "text-green-400"
+                                    }`}
+                            >
+                                {global[est].fpy}%
+                            </p>
+
+                            <p className="text-xs text-gray-400">
+                                Rejects: {global[est].rechazos}
+                            </p>
+
+                            {/* 🔥 FST SOLO GLOBAL ST */}
+                            {est === "ST" && (
+                                <p className="text-sm text-green-400 font-semibold mt-1">
+                                    FST: {global.ST.fst}% 
+                                </p>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+
+            {/* TABLA */}
             <div className="overflow-x-auto">
                 <table className="min-w-full bg-gray-800 rounded-lg">
                     <thead>
@@ -96,33 +101,66 @@ export default function TablaFPYPorDia() {
                     </thead>
 
                     <tbody className="text-white text-sm">
-                        {rows.map(r => (
-                            <tr key={r.fecha} className="even:bg-gray-700">
+
+                        {/* ⏳ LOADING */}
+                        {loading && (
+                            <tr>
+                                <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                                    Cargando datos…
+                                </td>
+                            </tr>
+                        )}
+
+                        {/* 🚫 SIN DATOS */}
+                        {!loading && rows.length === 0 && (
+                            <tr>
+                                <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                                    No hay datos para la semana {week}
+                                </td>
+                            </tr>
+                        )}
+
+                        {/* ✅ DATOS */}
+                        {rows.map(row => (
+                            <tr key={row.fecha} className="even:bg-gray-700">
                                 <td className="px-4 py-3 font-semibold">
-                                    {r.fecha}
+                                    {row.fecha}
                                 </td>
 
-                                {estaciones.map(e => (
-                                    <td
-                                        key={e}
-                                        className={`px-4 py-3 text-center font-bold
-                                            ${r[e] < 95
-                                                ? "text-red-400"
-                                                : "text-green-400"
-                                            }`}
-                                    >
-                                        {r[e]}%
-                                    </td>
-                                ))}
+                                {["MT", "ST", "FI"].map(est => {
+                                    const data = row[est];
+                                    if (!data) {
+                                        return (
+                                            <td key={est} className="px-4 py-3 text-center text-gray-500">
+                                                —
+                                            </td>
+                                        );
+                                    }
+
+                                    return (
+                                        <td
+                                            key={est}
+                                            className={`px-4 py-3 text-center font-bold
+                        ${data.fpy < 95
+                                                    ? "text-red-400"
+                                                    : "text-green-400"
+                                                }`}
+                                        >
+                                            <div className="flex flex-col items-center leading-tight">
+                                                <span>{data.fpy}%</span>
+                                                <span className="text-xs text-gray-400">
+                                                    ({data.rechazos}) Rejects
+                                                </span>
+                                            </div>
+                                        </td>
+                                    );
+                                })}
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
 
-            <p className="text-xs text-gray-400">
-                Cada fila corresponde a un documento FPY/{`{fecha}`} · No semanal
-            </p>
         </div>
     );
 }

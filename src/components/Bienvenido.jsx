@@ -42,11 +42,16 @@ function Bienvenido() {
           break;
         case "3":
           setApartments([
-            "Dashboard",
-            "Record",
+            "Desensamble",
+            "Analisis"
           ]);
           break;
-
+        case "4":
+          setApartments([
+            "Dashboard",
+            "Reporte"
+          ]);
+          break;
         default:
           setApartments([
             "Fallas",

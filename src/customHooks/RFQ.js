@@ -1,5 +1,7 @@
 import { getFirestore, collection, query, where, getDocs, addDoc, doc, updateDoc, runTransaction, setDoc, getDoc, increment } from "firebase/firestore";
 
+const lineas = ["L1", "L2", "L3", "LSA"];
+
 export async function obtenerFolioUnico() {
     const db = getFirestore();
     const ref = doc(db, "Contadores", "EnviosFinal");
@@ -189,7 +191,7 @@ export async function createFPYDiario() {
         id: fechaMX
     };
 }
-export async function getFallas(){
+export async function getFallas() {
     const data = await fetchRechazos();
     const hoy = new Date();
     const fechaFormateada = hoy.toLocaleDateString("en-US");
@@ -212,6 +214,134 @@ async function getLiberadosHoy(startOfDay) {
     const snapshot = await getDocs(q);
     return snapshot.size;
 }
+const getFechasMX = (dias) => {
+    const fechas = [];
+    const hoy = new Date();
+
+    for (let i = 0; i < dias; i++) {
+        const d = new Date(hoy);
+        d.setDate(hoy.getDate() - i);
+        fechas.push(
+            d.toLocaleDateString("es-MX", {
+                timeZone: "America/Mexico_City"
+            }).replaceAll("/", "-")
+        );
+    }
+
+    return fechas;
+};
+const calcularFPY = (liberados, rechazados) => {
+  const total = liberados + rechazados;
+  console.log(liberados)
+  if (total === 0) return 100;
+  return +(liberados / total * 100).toFixed(1);
+};
+export const getFPYGlobalPorWeek = async (week) => {
+  const db = getFirestore();
+
+  const q = query(
+    collection(db, "FPY"),
+    where("week", "==", Number(week))
+  );
+
+  const snap = await getDocs(q);
+
+  let liberados = 0;
+  let recuperadosST = 0;
+
+  let rechazados = { MT: 0, ST: 0, FI: 0 };
+
+  snap.forEach(docSnap => {
+    const fpy = docSnap.data();
+
+    // 🔥 Recuperados es por día, NO por línea
+    recuperadosST += fpy.Recuperados || 0;
+
+    lineas.forEach(l => {
+      liberados += fpy[`Liberados${l}`] || 0;
+
+      rechazados.MT += fpy[`Rechazados${l}MT`] || 0;
+      rechazados.ST += fpy[`Rechazados${l}ST`] || 0;
+      rechazados.FI += fpy[`Rechazados${l}FI`] || 0;
+    });
+  });
+
+  const fpyMT = calcularFPY(liberados, rechazados.MT);
+  const fpyST = calcularFPY(liberados, rechazados.ST);
+  const fpyFI = calcularFPY(liberados, rechazados.FI);
+
+  const rechazosFinalesST = Math.max(
+    rechazados.ST - recuperadosST,
+    0
+  );
+
+  const fstST =
+    liberados > 0
+      ? Number(
+          ((liberados - rechazosFinalesST) / liberados * 100).toFixed(1)
+        )
+      : 0;
+
+  return {
+    MT: { fpy: fpyMT, rechazos: rechazados.MT },
+    ST: {
+      fpy: fpyST,
+      fst: fstST,
+      rechazos: rechazados.ST,
+      recuperados: recuperadosST
+    },
+    FI: { fpy: fpyFI, rechazos: rechazados.FI }
+  };
+};
+
+export const getFPYPorWeek = async (week) => {
+  const db = getFirestore();
+
+  const q = query(
+    collection(db, "FPY"),
+    where("week", "==", Number(week))
+  );
+
+  const snap = await getDocs(q);
+
+  const rows = [];
+
+  snap.forEach(docSnap => {
+    const fpy = docSnap.data();
+
+    let liberadosDia = 0;
+    let rechazadosDia = { MT: 0, ST: 0, FI: 0 };
+
+    lineas.forEach(l => {
+      liberadosDia += fpy[`Liberados${l}`] || 0;
+
+      rechazadosDia.MT += fpy[`Rechazados${l}MT`] || 0;
+      rechazadosDia.ST += fpy[`Rechazados${l}ST`] || 0;
+      rechazadosDia.FI += fpy[`Rechazados${l}FI`] || 0;
+    });
+
+    rows.push({
+      fecha: docSnap.id,
+      week: fpy.week,
+      MT: {
+        fpy: calcularFPY(liberadosDia, rechazadosDia.MT),
+        rechazos: rechazadosDia.MT
+      },
+      ST: {
+        fpy: calcularFPY(liberadosDia, rechazadosDia.ST),
+        rechazos: rechazadosDia.ST
+      },
+      FI: {
+        fpy: calcularFPY(liberadosDia, rechazadosDia.FI),
+        rechazos: rechazadosDia.FI
+      }
+    })
+})
+console.log(rows)
+return rows
+}
+    
+
 function getFechaMX() {
     return new Date()
         .toLocaleDateString("es-MX", {

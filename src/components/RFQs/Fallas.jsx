@@ -23,8 +23,7 @@ function RFQ() {
       const fechaFormateada = hoy.toLocaleDateString("en-US");
       console.log(fechaFormateada)
       const filterData = data.filter(item =>
-        item.Status == "Rechazado" &&
-        item.Fecha === "2/5/2026"
+        item.Fecha === fechaFormateada
       ); 
       console.log(filterData)
       setFilteredData(filterData);
@@ -67,6 +66,7 @@ function RFQ() {
               <tr className="bg-yellow-500 text-black text-sm uppercase">
                 <th className="py-3 px-4 text-left w-12"></th>
                 <th className="py-3 px-4 text-left">SN Motor</th>
+                <th className="py-3 px-4 text-left">Status</th>
                 <th className="py-3 px-4 text-left">Fecha</th>
                 <th className="py-3 px-4 text-left">Razon </th>
                 <th className="py-3 px-4 text-left">Estacion</th>
@@ -89,6 +89,7 @@ function RFQ() {
                       />
                     </td>
                     <td className="py-3 px-4">{item.SN_Motor?.toString()}</td>
+                    <td className="py-3 px-4">{item.Status?.toString()}</td>
                     <td className="py-3 px-4">{item.Fecha?.toString()}</td>
                     <td className="py-3 px-4">{item.Razon?.toString()}</td>
                     <td className="py-3 px-4">{item.Estacion?.toString()}</td>

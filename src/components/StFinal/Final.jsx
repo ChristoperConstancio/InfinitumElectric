@@ -55,9 +55,7 @@ function FinalStation() {
         type: "success",
         message: "Motor liberado correctamente",
       });
-      console.log(form.JOB)
       const okJob = await sumarLiberadoAJOB(form.JOB);
-
       if (!okJob) {
         setAlert({
           show: true,
