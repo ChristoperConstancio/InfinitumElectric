@@ -26,9 +26,8 @@ function RegistroRechazos() {
   // Generar fecha actual en formato MM/DD/YYYY
   useEffect(() => {
     const hoy = new Date();
-    const fechaHoraMX = hoy.toLocaleString("es-MX", {
+    const fechaHoraMX = hoy.toLocaleDateString("en-US", {
       timeZone: "America/Mexico_City",
-      hour12: false
     });
     setFormData((prev) => ({ ...prev, Fecha: fechaHoraMX }));
   }, []);
@@ -55,7 +54,7 @@ function RegistroRechazos() {
       navigate('/fallas')
       return;
     }
-      setAlert({show: false, type :"error", message : "Fallo en la conexion a la base de datos"})
+    setAlert({ show: false, type: "error", message: "Fallo en la conexion a la base de datos" })
 
   };
 
