@@ -6,7 +6,6 @@ import AlertMessage from '../Alertas/AlertMessage';
 function RegistroRechazos() {
 
   const navigate = useNavigate(); // hook para navegación
-  const idRFQ = localStorage.getItem('idRFQ')
   const [tipo, setTipo] = useState("");
   const [alert, setAlert] = useState({ show: false, type: "", message: "" });
 
@@ -27,7 +26,7 @@ function RegistroRechazos() {
   // Generar fecha actual en formato MM/DD/YYYY
   useEffect(() => {
     const hoy = new Date();
-    const fechaHoraMX = now.toLocaleString("es-MX", {
+    const fechaHoraMX = hoy.toLocaleString("es-MX", {
       timeZone: "America/Mexico_City",
       hour12: false
     });

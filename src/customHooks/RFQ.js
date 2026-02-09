@@ -26,12 +26,15 @@ export async function obtenerFolioUnico() {
     return String(nuevoFolio).padStart(6, "0");
 }
 
-export async function fetchRechazos() {
+export async function fetchRechazos(fecha) {
     try {
         const db = getFirestore();
 
         const optionsRef = collection(db, "Rechazos"); // Reemplaza "opciones" con el nombre de tu colección
-        const querySnapshot = await getDocs(optionsRef);
+        const q = query(optionsRef, where("Fecha", "==", fecha));
+
+        const querySnapshot = await getDocs(q);
+        
 
         const optionsData = [];
         querySnapshot.forEach((doc) => {
@@ -231,116 +234,116 @@ const getFechasMX = (dias) => {
     return fechas;
 };
 const calcularFPY = (liberados, rechazados) => {
-  const total = liberados + rechazados;
-  console.log(liberados)
-  if (total === 0) return 100;
-  return +(liberados / total * 100).toFixed(1);
+    const total = liberados + rechazados;
+    console.log(liberados)
+    if (total === 0) return 100;
+    return +(liberados / total * 100).toFixed(1);
 };
 export const getFPYGlobalPorWeek = async (week) => {
-  const db = getFirestore();
+    const db = getFirestore();
 
-  const q = query(
-    collection(db, "FPY"),
-    where("week", "==", Number(week))
-  );
+    const q = query(
+        collection(db, "FPY"),
+        where("week", "==", Number(week))
+    );
 
-  const snap = await getDocs(q);
+    const snap = await getDocs(q);
 
-  let liberados = 0;
-  let recuperadosST = 0;
+    let liberados = 0;
+    let recuperadosST = 0;
 
-  let rechazados = { MT: 0, ST: 0, FI: 0 };
+    let rechazados = { MT: 0, ST: 0, FI: 0 };
 
-  snap.forEach(docSnap => {
-    const fpy = docSnap.data();
+    snap.forEach(docSnap => {
+        const fpy = docSnap.data();
 
-    // 🔥 Recuperados es por día, NO por línea
-    recuperadosST += fpy.Recuperados || 0;
+        // 🔥 Recuperados es por día, NO por línea
+        recuperadosST += fpy.Recuperados || 0;
 
-    lineas.forEach(l => {
-      liberados += fpy[`Liberados${l}`] || 0;
+        lineas.forEach(l => {
+            liberados += fpy[`Liberados${l}`] || 0;
 
-      rechazados.MT += fpy[`Rechazados${l}MT`] || 0;
-      rechazados.ST += fpy[`Rechazados${l}ST`] || 0;
-      rechazados.FI += fpy[`Rechazados${l}FI`] || 0;
+            rechazados.MT += fpy[`Rechazados${l}MT`] || 0;
+            rechazados.ST += fpy[`Rechazados${l}ST`] || 0;
+            rechazados.FI += fpy[`Rechazados${l}FI`] || 0;
+        });
     });
-  });
 
-  const fpyMT = calcularFPY(liberados, rechazados.MT);
-  const fpyST = calcularFPY(liberados, rechazados.ST);
-  const fpyFI = calcularFPY(liberados, rechazados.FI);
+    const fpyMT = calcularFPY(liberados, rechazados.MT);
+    const fpyST = calcularFPY(liberados, rechazados.ST);
+    const fpyFI = calcularFPY(liberados, rechazados.FI);
 
-  const rechazosFinalesST = Math.max(
-    rechazados.ST - recuperadosST,
-    0
-  );
+    const rechazosFinalesST = Math.max(
+        rechazados.ST - recuperadosST,
+        0
+    );
 
-  const fstST =
-    liberados > 0
-      ? Number(
-          ((liberados - rechazosFinalesST) / liberados * 100).toFixed(1)
-        )
-      : 0;
+    const fstST =
+        liberados > 0
+            ? Number(
+                ((liberados - rechazosFinalesST) / liberados * 100).toFixed(1)
+            )
+            : 0;
 
-  return {
-    MT: { fpy: fpyMT, rechazos: rechazados.MT },
-    ST: {
-      fpy: fpyST,
-      fst: fstST,
-      rechazos: rechazados.ST,
-      recuperados: recuperadosST
-    },
-    FI: { fpy: fpyFI, rechazos: rechazados.FI }
-  };
+    return {
+        MT: { fpy: fpyMT, rechazos: rechazados.MT },
+        ST: {
+            fpy: fpyST,
+            fst: fstST,
+            rechazos: rechazados.ST,
+            recuperados: recuperadosST
+        },
+        FI: { fpy: fpyFI, rechazos: rechazados.FI }
+    };
 };
 
 export const getFPYPorWeek = async (week) => {
-  const db = getFirestore();
+    const db = getFirestore();
 
-  const q = query(
-    collection(db, "FPY"),
-    where("week", "==", Number(week))
-  );
+    const q = query(
+        collection(db, "FPY"),
+        where("week", "==", Number(week))
+    );
 
-  const snap = await getDocs(q);
+    const snap = await getDocs(q);
 
-  const rows = [];
+    const rows = [];
 
-  snap.forEach(docSnap => {
-    const fpy = docSnap.data();
+    snap.forEach(docSnap => {
+        const fpy = docSnap.data();
 
-    let liberadosDia = 0;
-    let rechazadosDia = { MT: 0, ST: 0, FI: 0 };
+        let liberadosDia = 0;
+        let rechazadosDia = { MT: 0, ST: 0, FI: 0 };
 
-    lineas.forEach(l => {
-      liberadosDia += fpy[`Liberados${l}`] || 0;
+        lineas.forEach(l => {
+            liberadosDia += fpy[`Liberados${l}`] || 0;
 
-      rechazadosDia.MT += fpy[`Rechazados${l}MT`] || 0;
-      rechazadosDia.ST += fpy[`Rechazados${l}ST`] || 0;
-      rechazadosDia.FI += fpy[`Rechazados${l}FI`] || 0;
-    });
+            rechazadosDia.MT += fpy[`Rechazados${l}MT`] || 0;
+            rechazadosDia.ST += fpy[`Rechazados${l}ST`] || 0;
+            rechazadosDia.FI += fpy[`Rechazados${l}FI`] || 0;
+        });
 
-    rows.push({
-      fecha: docSnap.id,
-      week: fpy.week,
-      MT: {
-        fpy: calcularFPY(liberadosDia, rechazadosDia.MT),
-        rechazos: rechazadosDia.MT
-      },
-      ST: {
-        fpy: calcularFPY(liberadosDia, rechazadosDia.ST),
-        rechazos: rechazadosDia.ST
-      },
-      FI: {
-        fpy: calcularFPY(liberadosDia, rechazadosDia.FI),
-        rechazos: rechazadosDia.FI
-      }
+        rows.push({
+            fecha: docSnap.id,
+            week: fpy.week,
+            MT: {
+                fpy: calcularFPY(liberadosDia, rechazadosDia.MT),
+                rechazos: rechazadosDia.MT
+            },
+            ST: {
+                fpy: calcularFPY(liberadosDia, rechazadosDia.ST),
+                rechazos: rechazadosDia.ST
+            },
+            FI: {
+                fpy: calcularFPY(liberadosDia, rechazadosDia.FI),
+                rechazos: rechazadosDia.FI
+            }
+        })
     })
-})
-console.log(rows)
-return rows
+    console.log(rows)
+    return rows
 }
-    
+
 
 function getFechaMX() {
     return new Date()
