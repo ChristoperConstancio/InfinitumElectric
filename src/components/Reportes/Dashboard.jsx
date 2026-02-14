@@ -4,7 +4,8 @@ import {
   doc,
   getDoc,
   getDocs,
-  collection
+  collection,
+  setDoc
 } from "firebase/firestore";
 import {
   BarChart,
@@ -25,17 +26,13 @@ const lineas = ["L1", "L2", "L3", "LSA"];
 const calcularFPY = (liberados, rechazados) => {
   const total = liberados + rechazados;
   if (total === 0) return 100;
-  return +(liberados / total * 100).toFixed(1);
+  return +((liberados / total) * 100).toFixed(1);
 };
 
-/* ================= COMPONENTE ================= */
+/* ================= UTILIDAD FPY ================= */
 
-export default function TablaFPY() {
-  const db = getFirestore();
-
-  const [fechas, setFechas] = useState([]);
-  const [fecha, setFecha] = useState("");
-  const [data, setData] = useState({
+const crearEstructuraFPY = (lineas) => {
+  const resultado = {
     Liberados: {},
     MT: {},
     ST: {},
@@ -46,27 +43,40 @@ export default function TablaFPY() {
       ST: 0,
       FI: 0
     }
+  };
+
+  lineas.forEach(l => {
+    resultado.Liberados[l] = 0;
+    resultado.MT[l] = 0;
+    resultado.ST[l] = 0;
+    resultado.FI[l] = 0;
   });
 
-  /* ================= CARGAR FECHAS ================= */
+  return resultado;
+};
+
+/* ================= COMPONENTE ================= */
+
+export default function TablaFPY() {
+  const db = getFirestore();
+
+  const [fecha, setFecha] = useState("");
+  const [fechaISO, setFechaISO] = useState("");
+  const [data, setData] = useState(crearEstructuraFPY(lineas));
+
+  /* ================= INICIALIZAR CON HOY ================= */
 
   useEffect(() => {
-    const cargarFechas = async () => {
-      const snap = await getDocs(collection(db, "FPY"));
+    const hoy = new Date();
 
-      const lista = snap.docs
-        .map(d => d.id)
-        .sort((a, b) => {
-          const [da, ma, ya] = a.split("-").map(Number);
-          const [db, mb, yb] = b.split("-").map(Number);
-          return new Date(yb, mb - 1, db) - new Date(ya, ma - 1, da);
-        });
+    const year = hoy.getFullYear();
+    const month = String(hoy.getMonth() + 1).padStart(2, "0");
+    const day = String(hoy.getDate()).padStart(2, "0");
 
-      setFechas(lista);
-      if (lista.length) setFecha(lista[0]);
-    };
+    const iso = `${year}-${month}-${day}`;
+    setFechaISO(iso);
 
-    cargarFechas();
+    setFecha(`${hoy.getDate()}-${hoy.getMonth() + 1}-${year}`);
   }, []);
 
   /* ================= CARGAR FPY ================= */
@@ -74,61 +84,42 @@ export default function TablaFPY() {
   useEffect(() => {
     if (!fecha) return;
 
-    cargarFPY();
-    const interval = setInterval(cargarFPY, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [fecha]);
+    const cargarFPY = async () => {
+      const ref = doc(db, "FPY", fecha);
+      const snap = await getDoc(ref);
 
-  const cargarFPY = async () => {
-    const ref = doc(db, "FPY", fecha);
-    const snap = await getDoc(ref);
+      const resultado = crearEstructuraFPY(lineas);
 
-    const resultado = {
-      Liberados: {},
-      MT: {},
-      ST: {},
-      FI: {},
-      Total: {
-        Liberados: 0,
-        MT: 0,
-        ST: 0,
-        FI: 0
+      if (snap.exists()) {
+        const fpy = snap.data();
+
+        lineas.forEach(l => {
+          const liberados = fpy[`Liberados${l}`] || 0;
+          const mt = fpy[`Rechazados${l}MT`] || 0;
+          const st = fpy[`Rechazados${l}ST`] || 0;
+          const fi = fpy[`Rechazados${l}FI`] || 0;
+
+          resultado.Liberados[l] = liberados;
+          resultado.MT[l] = mt;
+          resultado.ST[l] = st;
+          resultado.FI[l] = fi;
+
+          resultado.Total.Liberados += liberados;
+          resultado.Total.MT += mt;
+          resultado.Total.ST += st;
+          resultado.Total.FI += fi;
+        });
       }
+
+      setData(resultado);
     };
 
-    lineas.forEach(l => {
-      resultado.Liberados[l] = 0;
-      resultado.MT[l] = 0;
-      resultado.ST[l] = 0;
-      resultado.FI[l] = 0;
-    });
+    cargarFPY();
 
-    if (!snap.exists()) {
-      setData(resultado);
-      return;
-    }
+    const interval = setInterval(cargarFPY, 5 * 60 * 1000);
+    return () => clearInterval(interval);
 
-    const fpy = snap.data();
-
-    lineas.forEach(l => {
-      const liberados = fpy[`Liberados${l}`] || 0;
-      const mt = fpy[`Rechazados${l}MT`] || 0;
-      const st = fpy[`Rechazados${l}ST`] || 0;
-      const fi = fpy[`Rechazados${l}FI`] || 0;
-
-      resultado.Liberados[l] = liberados;
-      resultado.MT[l] = mt;
-      resultado.ST[l] = st;
-      resultado.FI[l] = fi;
-
-      resultado.Total.Liberados += liberados;
-      resultado.Total.MT += mt;
-      resultado.Total.ST += st;
-      resultado.Total.FI += fi;
-    });
-
-    setData(resultado);
-  };
+  }, [fecha]);
 
   /* ================= DATA GRÁFICA ================= */
 
@@ -144,21 +135,24 @@ export default function TablaFPY() {
   return (
     <div className="p-6 bg-gray-800 space-y-8">
 
-      {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-white text-3xl font-bold">
           Producción – FPY
         </h1>
 
-        <select
+        {/* ✅ CALENDARIO FUNCIONAL */}
+        <input
+          type="date"
           className="bg-gray-700 text-white p-2 rounded"
-          value={fecha}
-          onChange={e => setFecha(e.target.value)}
-        >
-          {fechas.map(f => (
-            <option key={f} value={f}>{f}</option>
-          ))}
-        </select>
+          value={fechaISO}
+          onChange={(e) => {
+            const value = e.target.value; // 2026-02-11
+            setFechaISO(value);
+
+            const [year, month, day] = value.split("-");
+            setFecha(`${Number(day)}-${Number(month)}-${year}`);
+          }}
+        />
 
         <div className="flex items-center gap-3">
           <h1 className="text-4xl font-bold rounded-md w-64 text-white bg-green-800 text-center">
@@ -177,13 +171,11 @@ export default function TablaFPY() {
               {lineas.map(l => (
                 <th key={l} className="px-4 py-3 text-center">{l}</th>
               ))}
-              <th className="px-4 py-3 text-center">TOTAL</th>
+              <th className="px-4 py-3 text-center">Global</th>
             </tr>
           </thead>
 
           <tbody className="text-sm text-white">
-
-            {/* LIBERADOS */}
             <tr className="bg-green-800 font-semibold">
               <td className="px-4 py-2">Liberados</td>
               {lineas.map(l => (
@@ -195,64 +187,49 @@ export default function TablaFPY() {
                 {data.Total.Liberados}
               </td>
             </tr>
-
-            {/* MT */}
-            <tr>
-              <td className="px-4 py-2">Motor Test</td>
-              {lineas.map(l => (
-                <td key={l} className="px-4 py-2 text-center">{data.MT[l]}</td>
-              ))}
-              <td className="px-4 py-2 text-center font-bold">{data.Total.MT}</td>
-            </tr>
-            <tr className="bg-gray-700 text-yellow-300 font-semibold">
-              <td className="px-4 py-2">FPY MT (%)</td>
-              {lineas.map(l => (
-                <td key={l} className="px-4 py-2 text-center">
-                  {calcularFPY(data.Liberados[l], data.MT[l])}%
-                </td>
-              ))}
-              <td className="px-4 py-2 text-center font-bold">
-                {calcularFPY(data.Total.Liberados, data.Total.MT)}%
-              </td>
-            </tr>
-
-            {/* ST */}
             <tr>
               <td className="px-4 py-2">System Test</td>
-              {lineas.map(l => (
-                <td key={l} className="px-4 py-2 text-center">{data.ST[l]}</td>
-              ))}
-              <td className="px-4 py-2 text-center font-bold">{data.Total.ST}</td>
-            </tr>
-            <tr className="bg-gray-700 text-sky-300 font-semibold">
-              <td className="px-4 py-2">FPY ST (%)</td>
-              {lineas.map(l => (
-                <td key={l} className="px-4 py-2 text-center">
-                  {calcularFPY(data.Liberados[l], data.ST[l])}%
-                </td>
-              ))}
+              {lineas.map(l => {
+                const rechazados = data.ST[l];
+                const fpy = calcularFPY(data.Liberados[l], rechazados);
+                return (
+                  <td key={l} className="px-4 py-2 text-center">
+                    {rechazados} ({fpy}%)
+                  </td>
+                );
+              })}
               <td className="px-4 py-2 text-center font-bold">
-                {calcularFPY(data.Total.Liberados, data.Total.ST)}%
+                {data.Total.ST} ({calcularFPY(data.Total.Liberados, data.Total.ST)}%)
               </td>
             </tr>
-
-            {/* FI */}
+            <tr>
+              <td className="px-4 py-2">Motor Test</td>
+              {lineas.map(l => {
+                const rechazados = data.MT[l];
+                const fpy = calcularFPY(data.Liberados[l], rechazados);
+                return (
+                  <td key={l} className="px-4 py-2 text-center">
+                    {rechazados} ({fpy}%)
+                  </td>
+                );
+              })}
+              <td className="px-4 py-2 text-center font-bold">
+                {data.Total.MT} ({calcularFPY(data.Total.Liberados, data.Total.MT)}%)
+              </td>
+            </tr>
             <tr>
               <td className="px-4 py-2">Final Inspection</td>
-              {lineas.map(l => (
-                <td key={l} className="px-4 py-2 text-center">{data.FI[l]}</td>
-              ))}
-              <td className="px-4 py-2 text-center font-bold">{data.Total.FI}</td>
-            </tr>
-            <tr className="bg-gray-700 text-green-300 font-semibold">
-              <td className="px-4 py-2">FPY FI (%)</td>
-              {lineas.map(l => (
-                <td key={l} className="px-4 py-2 text-center">
-                  {calcularFPY(data.Liberados[l], data.FI[l])}%
-                </td>
-              ))}
+              {lineas.map(l => {
+                const rechazados = data.FI[l];
+                const fpy = calcularFPY(data.Liberados[l], rechazados);
+                return (
+                  <td key={l} className="px-4 py-2 text-center">
+                    {rechazados} ({fpy}%)
+                  </td>
+                );
+              })}
               <td className="px-4 py-2 text-center font-bold">
-                {calcularFPY(data.Total.Liberados, data.Total.FI)}%
+                {data.Total.FI} ({calcularFPY(data.Total.Liberados, data.Total.FI)}%)
               </td>
             </tr>
 
@@ -260,29 +237,11 @@ export default function TablaFPY() {
         </table>
       </div>
 
-      {/* GRÁFICA */}
-      <div className="bg-gray-800 rounded-lg shadow-md p-4">
-        <h4 className="font-semibold text-white mb-4">
-          FPY por Línea (%)
-        </h4>
-
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={fpyChartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="linea" />
-            <YAxis domain={[90, 100]} tickFormatter={v => `${v}%`} />
-            <Tooltip formatter={v => `${v}%`} />
-            <Legend />
-            <Bar dataKey="MT" fill="#facc15" />
-            <Bar dataKey="ST" fill="#38bdf8" />
-            <Bar dataKey="FI" fill="#22c55e" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
       <p className="text-xs text-white">
-        Actualización automática cada 5 minutos · Fecha: {fecha}
+        Fecha actual: {fecha}
       </p>
+
     </div>
   );
 }
+

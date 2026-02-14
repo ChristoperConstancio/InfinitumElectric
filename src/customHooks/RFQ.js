@@ -31,9 +31,9 @@ export async function fetchRechazos(fecha) {
         const db = getFirestore();
 
         const optionsRef = collection(db, "Rechazos"); // Reemplaza "opciones" con el nombre de tu colección
-        const q = query(optionsRef, where("Fecha", "==", fecha));
 
-        const querySnapshot = await getDocs(q);
+
+        const querySnapshot = await getDocs(optionsRef);
         
 
         const optionsData = [];

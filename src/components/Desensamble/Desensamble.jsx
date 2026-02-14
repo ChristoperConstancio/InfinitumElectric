@@ -12,23 +12,6 @@ function Desenmsable() {
   const navigate = useNavigate();
   const [buttons, setButtonsState] = useState(false)
 
-
-  const modify = () => {
-    if (selectedRow == null || selectedRow == '') {
-      alert("Selecciona una venta");
-      return;
-    } else {
-      navigate('/VentasEditar');
-    }
-  }
-  const addRegistro = () => {
-    if (selectedRow == null || selectedRow == '') {
-      alert("Selecciona una venta");
-      return;
-    } else {
-      navigate('/VentasView');
-    }
-  }
   const toggleCheckbox = (item) => {
 
     setSelectedRow(item.SN_Motor)
