@@ -232,7 +232,7 @@ export default function DashboardFPY() {
         </div>
         <div className="bg-gray-900 p-6 rounded-xl shadow-lg text-center">
           <h2 className="text-gray-400 text-sm uppercase">
-            Rechazos / Analizados
+            Rechazos / Recuperados
           </h2>
 
           <h1 className="text-5xl font-bold text-white">
