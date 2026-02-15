@@ -1,13 +1,11 @@
 import React from 'react'
-import logo from '../assets/rayo.png'
+import logo from '../assets/rayo.gif'
 import shut from '../assets/shutdown.png'
 import back from '../assets/left-arrow.png'
 import { useNavigate, Link } from 'react-router-dom'
 function HeaderB({ setIsAuthenticated }) {
   const navigate = useNavigate();
-  const goBack = () => {
-    navigate(-1);
-  }
+
   const logOut = () => {
     localStorage.clear();
 
@@ -40,7 +38,7 @@ function HeaderB({ setIsAuthenticated }) {
 
         {/* Texto solo en pantallas medianas+ */}
         <h1 className="hidden sm:block text-white font-bold text-lg md:text-3xl">
-          Quality Saltillo
+          Infinitum Saltillo
         </h1>
       </div>
 

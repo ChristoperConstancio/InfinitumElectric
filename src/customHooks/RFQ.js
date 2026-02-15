@@ -31,9 +31,9 @@ export async function fetchRechazos(fecha) {
         const db = getFirestore();
 
         const optionsRef = collection(db, "Rechazos"); // Reemplaza "opciones" con el nombre de tu colección
+        const q = query(optionsRef, where("Fecha", "==", fecha));
 
-
-        const querySnapshot = await getDocs(optionsRef);
+        const querySnapshot = await getDocs(q);
         
 
         const optionsData = [];
@@ -297,7 +297,7 @@ export const getFPYGlobalPorWeek = async (week) => {
     };
 };
 
-export const getFPYPorWeek = async (week) => {
+export const getFPYPorWeek = async (week, year) => {
     const db = getFirestore();
 
     const q = query(
@@ -310,6 +310,12 @@ export const getFPYPorWeek = async (week) => {
     const rows = [];
 
     snap.forEach(docSnap => {
+
+        // 🔥 FILTRO POR AÑO DESDE EL ID
+        const yearDoc = Number(docSnap.id.slice(-4));
+
+        if (yearDoc !== Number(year)) return;
+
         const fpy = docSnap.data();
 
         let liberadosDia = 0;
@@ -338,11 +344,13 @@ export const getFPYPorWeek = async (week) => {
                 fpy: calcularFPY(liberadosDia, rechazadosDia.FI),
                 rechazos: rechazadosDia.FI
             }
-        })
-    })
-    console.log(rows)
-    return rows
-}
+        });
+    });
+
+    console.log(rows);
+    return rows;
+};
+
 
 
 function getFechaMX() {
@@ -358,23 +366,36 @@ export async function addLiberados(data) {
 
     try {
         // 1️⃣ Guardar en Liberados
-        await addDoc(collection(db, "Liberados"), data);
+        const docRef = doc(db, "Liberados", data.SN_CATALOG);
+        const snap = await getDoc(docRef);
+
+        if (snap.exists()) {
+            return { exists: true };
+        }
+
+        await setDoc(docRef, data);
 
         // 2️⃣ Preparar FPY
-        const fechaMX = getFechaMX();               // ej. 03-02-2026
-        const linea = data.linea;                   // L1 | L2 | L3
-        const campoFPY = `Liberados${linea}`;       // LiberadosL1, L2, L3
-        console.log(campoFPY)
-        console.log(linea)
+        const fechaMX = getFechaMX();              // ej. 15-2-2026
+        const linea = data.linea;                  // L1 | L2 | L3
+        const campoLiberados = `Liberados${linea}`;
 
         const fpyRef = doc(db, "FPY", fechaMX);
 
-        // 3️⃣ Incrementar FPY
-        await updateDoc(fpyRef, {
-            [campoFPY]: increment(1)
-        });
+        // 3️⃣ Construir objeto dinámico de actualización
+        let updateData = {
+            [campoLiberados]: increment(1)
+        };
 
-        return true;
+        // ✅ 4️⃣ Si viene recuperado = "Si"
+        if (data.recuperado === "Si") {
+            updateData['recuperado'] = increment(1);
+        }
+
+        // 5️⃣ Actualizar documento FPY
+        await updateDoc(fpyRef, updateData);
+
+        return { success: true };
 
     } catch (error) {
         alert("Error en la base de datos: " + error);
@@ -530,6 +551,24 @@ export async function addJob(JOB, data) {
 
 }
 
+export async function getJobs() {
+    const db = getFirestore();
+
+    try {
+        const q = collection(db, "JOBS")
+
+
+        const snapshot = await getDocs(q);
+
+        return snapshot.docs.map(doc => ({
+            id: doc.id,      // 👈 la JOB
+            ...doc.data(),
+        }));
+    } catch (error) {
+        console.error("Error obteniendo JOBs:", error);
+        return [];
+    }
+}
 export async function getJobsActivas() {
     const db = getFirestore();
 
@@ -550,6 +589,22 @@ export async function getJobsActivas() {
         return [];
     }
 }
+export const cerrarJob = async (jobId) => {
+    const db = getFirestore();
+
+  try {
+    const jobRef = doc(db, "JOBS", jobId);
+
+    await updateDoc(jobRef, {
+      Status: "Cerrada",
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error cerrando job:", error);
+    throw error;
+  }
+};
 
 export async function sumarLiberadoAJOB(jobId) {
     try {

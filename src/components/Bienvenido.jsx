@@ -24,7 +24,7 @@ function Bienvenido() {
             "Analisis",
             "Final",
             "Envios",
-            "JOB",
+            "JOBS",
             "Dashboard",
             "Record"
           ]);
@@ -36,7 +36,7 @@ function Bienvenido() {
             "Desensamble",
             "Analisis",
             "Dashboard",
-            "JOB",
+            "JOBS",
             "Final",
           ]);
           break;

@@ -90,7 +90,7 @@ function Fallas() {
           <thead>
             <tr className="bg-yellow-500 text-black text-sm uppercase">
               <th className="py-3 px-4 w-12"></th>
-              <th className="py-3 px-4 text-left">SN Motor</th>
+              <th className="py-3 px-4 text-left">SN VFD</th>
               <th className="py-3 px-4 text-left">Status</th>
               <th className="py-3 px-4 text-left">Fecha</th>
               <th className="py-3 px-4 text-left">Razón</th>
