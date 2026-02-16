@@ -267,6 +267,15 @@ function BuscarRechazo() {
                                     className="w-full bg-gray-800 border border-gray-600 rounded-lg p-2"
                                 />
                             </div>
+                               <div>
+                                <label className="block text-sm font-medium mb-1 text-gray-300">JOB</label>
+                                <input
+                                    type="text"
+                                    value={resultado.JOB}
+                                    readOnly
+                                    className="w-full bg-gray-800 border border-gray-600 rounded-lg p-2"
+                                />
+                            </div>
                         </div>
                     </div>
 

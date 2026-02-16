@@ -102,7 +102,7 @@ function Desenmsable() {
             ) : (
               <tr>
                 <td colSpan="10" className="text-center py-6 text-gray-400 italic">
-                  No hay registros disponibles o selecciona una empresa.
+                  No hay registros disponibles 
                 </td>
               </tr>
             )}

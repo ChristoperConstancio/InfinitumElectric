@@ -17,6 +17,12 @@ const calcularFPY = (liberados, rechazados) => {
   if (total === 0) return 100;
   return +((liberados / total) * 100).toFixed(1);
 };
+const calcularFPYLinea = (liberados, mt, st, fi) => {
+  const rechazados = mt + st + fi;
+  const total = liberados + rechazados;
+  if (total === 0) return 100;
+  return +((liberados / total) * 100).toFixed(1);
+};
 
 const crearEstructuraFPY = (lineas) => {
   const resultado = {
@@ -236,14 +242,14 @@ export default function DashboardFPY() {
           </h2>
 
           <h1 className="text-5xl font-bold text-white">
-            {analizados} / {data.Total.Recuperados} 
+            {analizados} / {data.Total.Recuperados}
           </h1>
 
           <p className={`text-lg mt-2 font-semibold ${porcentajeRecuperacion >= 80
-              ? "text-green-400"
-              : porcentajeRecuperacion >= 50
-                ? "text-yellow-400"
-                : "text-red-500"
+            ? "text-green-400"
+            : porcentajeRecuperacion >= 50
+              ? "text-yellow-400"
+              : "text-red-500"
             }`}>
             {porcentajeRecuperacion}%
           </p>
@@ -315,31 +321,70 @@ export default function DashboardFPY() {
       </div>
 
       {/* ================= TABLA ================= */}
-
       <div className="overflow-x-auto">
         <table className="min-w-full bg-gray-800 rounded-lg shadow-md">
           <thead>
-            <tr className="text-white uppercase text-sm">
-              <th className="px-4 py-3 text-left">Estación</th>
-              {lineas.map(l => (
-                <th key={l} className="px-4 py-3 text-center">{l}</th>
-              ))}
-              <th className="px-4 py-3 text-center">Global</th>
+            <tr className="text-white uppercase text-sm bg-gray-900">
+              <th className="px-4 py-3 text-left">Línea</th>
+              <th className="px-4 py-3 text-center">FPY MT %</th>
+              <th className="px-4 py-3 text-center">FPY ST %</th>
+              <th className="px-4 py-3 text-center">FPY FI %</th>
             </tr>
           </thead>
 
           <tbody className="text-sm text-white">
-            <tr className="bg-green-800 font-semibold">
-              <td className="px-4 py-2">Liberados</td>
-              {lineas.map(l => (
-                <td key={l} className="px-4 py-2 text-center">
-                  {data.Liberados[l]}
-                </td>
-              ))}
-              <td className="px-4 py-2 text-center font-bold">
-                {data.Total.Liberados}
+
+            {lineas.map(l => {
+              const fpyMTLinea = calcularFPY(data.Liberados[l], data.MT[l]);
+              const fpySTLinea = calcularFPY(data.Liberados[l], data.ST[l]);
+              const fpyFILinea = calcularFPY(data.Liberados[l], data.FI[l]);
+              const fpyTotalLinea = calcularFPYLinea(
+                data.Liberados[l],
+                data.MT[l],
+                data.ST[l],
+                data.FI[l]
+              );
+
+              return (
+                <tr key={l} className="border-t border-gray-700">
+                  <td className="px-4 py-3 font-semibold bg-gray-900">{l}</td>
+
+                  <td className={`px-4 py-3 text-center font-bold ${fpyMTLinea >= 98 ? "text-green-400" : "text-red-500"}`}>
+                    {fpyMTLinea}% ({data.MT[l]})
+                  </td>
+
+                  <td className={`px-4 py-3 text-center font-bold ${fpySTLinea >= 98 ? "text-green-400" : "text-red-500"}`}>
+                    {fpySTLinea}% ({data.ST[l]})
+                  </td>
+
+                  <td className={`px-4 py-3 text-center font-bold ${fpyFILinea >= 98 ? "text-green-400" : "text-red-500"}`}>
+                    {fpyFILinea}% ({data.FI[l]})
+                  </td>
+
+                  
+                </tr>
+              );
+            })}
+
+            {/* FILA GLOBAL */}
+            <tr className="bg-gray-900 border-t border-white font-bold">
+              <td className="px-4 py-3">GLOBAL</td>
+
+              <td className={`px-4 py-3 text-center ${fpyMT >= 98 ? "text-green-400" : "text-red-500"}`}>
+                {fpyMT}%
               </td>
+
+              <td className={`px-4 py-3 text-center ${fpyST >= 98 ? "text-green-400" : "text-red-500"}`}>
+                {fpyST}%
+              </td>
+
+              <td className={`px-4 py-3 text-center ${fpyFI >= 98 ? "text-green-400" : "text-red-500"}`}>
+                {fpyFI}%
+              </td>
+
+
             </tr>
+
           </tbody>
         </table>
       </div>

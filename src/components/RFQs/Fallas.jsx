@@ -62,7 +62,7 @@ function Fallas() {
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2"
+          className="bg-gray-200 text-black border border-white rounded-lg px-3 py-2"
         />
 
         {/* Buscar */}
