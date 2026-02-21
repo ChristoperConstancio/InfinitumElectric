@@ -30,7 +30,6 @@ const crearEstructuraFPY = (lineas) => {
     MT: {},
     ST: {},
     FI: {},
-    Recuperados: {}, // 👈 NUEVO
     Total: {
       Liberados: 0,
       MT: 0,
@@ -45,14 +44,13 @@ const crearEstructuraFPY = (lineas) => {
     resultado.MT[l] = 0;
     resultado.ST[l] = 0;
     resultado.FI[l] = 0;
-    resultado.Recuperados[l] = 0; // 👈 NUEVO
   });
 
   return resultado;
 };
 
 
-export default function DashboardFPY() {
+export default function TablaFPY() {
 
   const db = getFirestore();
   const [fecha, setFecha] = useState("");
@@ -87,49 +85,47 @@ export default function DashboardFPY() {
     data.Total.Liberados,
     data.Total.FI
   );
-  useEffect(() => {
-    if (!fecha) return;
+useEffect(() => {
+  if (!fecha) return;
 
-    const cargarFPY = async () => {
-      const ref = doc(db, "FPY", fecha);
-      const snap = await getDoc(ref);
+  const cargarFPY = async () => {
+    const ref = doc(db, "FPY", fecha);
+    const snap = await getDoc(ref);
 
-      const resultado = crearEstructuraFPY(lineas);
+    const resultado = crearEstructuraFPY(lineas);
 
-      if (snap.exists()) {
-        const fpy = snap.data();
+    if (snap.exists()) {
+      const fpy = snap.data();
+      const recuperados = fpy['recuperado'] || 0; // ✅ ahora sí existe
 
-        lineas.forEach(l => {
-          const liberados = fpy[`Liberados${l}`] || 0;
-          const mt = fpy[`Rechazados${l}MT`] || 0;
-          const st = fpy[`Rechazados${l}ST`] || 0;
-          const fi = fpy[`Rechazados${l}FI`] || 0;
-          const recuperados = fpy['recuperados'] || 0;
+      lineas.forEach(l => {
+        const liberados = fpy[`Liberados${l}`] || 0;
+        const mt = fpy[`Rechazados${l}MT`] || 0;
+        const st = fpy[`Rechazados${l}ST`] || 0;
+        const fi = fpy[`Rechazados${l}FI`] || 0;
 
-          resultado.Liberados[l] = liberados;
-          resultado.MT[l] = mt;
-          resultado.ST[l] = st;
-          resultado.FI[l] = fi;
-          resultado.Recuperados[l] = recuperados;
+        resultado.Liberados[l] = liberados;
+        resultado.MT[l] = mt;
+        resultado.ST[l] = st;
+        resultado.FI[l] = fi;
 
-          resultado.Total.Liberados += liberados;
-          resultado.Total.MT += mt;
-          resultado.Total.ST += st;
-          resultado.Total.FI += fi;
-          resultado.Total.Recuperados += recuperados;
+        resultado.Total.Liberados += liberados;
+        resultado.Total.MT += mt;
+        resultado.Total.ST += st;
+        resultado.Total.FI += fi;
+      });
 
-        });
-      }
+      resultado.Total.Recuperados = recuperados;
+    }
 
-      setData(resultado);
-    };
+    setData(resultado);
+  };
 
-    cargarFPY();
-    const interval = setInterval(cargarFPY, 5 * 60 * 1000);
-    return () => clearInterval(interval);
+  cargarFPY();
+  const interval = setInterval(cargarFPY, 5 * 60 * 1000);
+  return () => clearInterval(interval);
 
-  }, [fecha]);
-
+}, [fecha]);
   /* ================= KPI ADHERENCIA ================= */
 
   const META_TURNO = 142;
@@ -361,7 +357,7 @@ export default function DashboardFPY() {
                     {fpyFILinea}% ({data.FI[l]})
                   </td>
 
-                  
+
                 </tr>
               );
             })}

@@ -43,7 +43,7 @@ export default function TablaFPYPorDia() {
                 {/* YEAR */}
                 <div className="flex items-center gap-2">
                     <label className="text-sm text-gray-300 font-semibold">
-                        Año:
+                        Year:
                     </label>
 
                     <select

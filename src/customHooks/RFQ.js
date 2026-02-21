@@ -38,8 +38,10 @@ export async function fetchRechazos(fecha) {
 
         const optionsData = [];
         querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            optionsData.push(data); // Ajusta según la estructura de tus documentos
+            optionsData.push({
+                id:doc.id,
+                ...doc.data()
+            }); // Ajusta según la estructura de tus documentos
         });
 
         return optionsData;
@@ -258,7 +260,7 @@ export const getFPYGlobalPorWeek = async (week) => {
         const fpy = docSnap.data();
 
         // 🔥 Recuperados es por día, NO por línea
-        recuperadosST += fpy.Recuperados || 0;
+        recuperadosST += fpy.recuperado || 0;
 
         lineas.forEach(l => {
             liberados += fpy[`Liberados${l}`] || 0;

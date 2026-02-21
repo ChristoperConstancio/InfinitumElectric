@@ -198,6 +198,8 @@ function RegistroRechazos() {
             <option value="LSAST">Linea SA System Test</option>
             <option value="LSAMT">Linea SA Motor Test</option>
             <option value="LSAFI">Linea SA Final Inspection</option>
+            <option value="LVFD">Linea VFD</option>
+
 
 
           </select>
