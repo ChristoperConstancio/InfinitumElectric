@@ -115,7 +115,7 @@ function Fallas() {
                       className="accent-yellow-500"
                     />
                   </td>
-                  <td className="py-3 px-4">{item.SN_Motor}</td>
+                  <td className="py-3 px-4">{item.id}</td>
                   <td className="py-3 px-4">{item.Status}</td>
                   <td className="py-3 px-4">{item.Fecha}</td>
                   <td className="py-3 px-4">{item.Razon}</td>

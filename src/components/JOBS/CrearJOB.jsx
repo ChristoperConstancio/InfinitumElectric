@@ -48,6 +48,7 @@ function AltaJob() {
                 SKU: "",
                 VFD: "",
                 Rotor: "",
+                Flecha:"",
                 Motor: "",
                 Cantidad: "",
             });

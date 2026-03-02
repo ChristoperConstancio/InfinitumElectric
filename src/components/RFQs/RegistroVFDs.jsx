@@ -76,6 +76,48 @@ function FormVFD() {
 
       {/* Formulario principal */}
       {resultado && (
+        <div>
+          {/* Información del rechazo */}
+<div className="bg-gray-800 border border-gray-700 rounded-xl p-5 mb-6">
+  <h3 className="text-lg font-semibold text-red-400 mb-4">
+    Información del Rechazo
+  </h3>
+
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    
+    <div>
+      <label className="block text-sm text-gray-400 mb-1">JOB</label>
+      <input
+        type="text"
+        value={resultado.JOB || ""}
+        readOnly
+        className="w-full bg-gray-900 text-gray-300 border border-gray-700 rounded-lg p-2"
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm text-gray-400 mb-1">Estación</label>
+      <input
+        type="text"
+        value={resultado.Estacion || ""}
+        readOnly
+        className="w-full bg-gray-900 text-gray-300 border border-gray-700 rounded-lg p-2"
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm text-gray-400 mb-1">Razón</label>
+      <input
+        type="text"
+        value={resultado.Razon || ""}
+        readOnly
+        className="w-full bg-gray-900 text-gray-300 border border-gray-700 rounded-lg p-2"
+      />
+    </div>
+
+  </div>
+
+        </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <h3 className="text-xl font-semibold mb-3 text-gray-200">Selecciona las tarjetas a reemplazar</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -117,6 +159,7 @@ function FormVFD() {
 
           <button type="submit" className="w-full bg-green-500 text-black font-semibold rounded-xl py-2 hover:bg-green-400 transition-all">Guardar cambios</button>
         </form>
+        </div>
       )}
     </div>
   );

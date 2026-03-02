@@ -48,6 +48,7 @@ function Bienvenido() {
           break;
         case "4":
           setApartments([
+            "Fallas",
             "Dashboard",
             "Record"
           ]);
