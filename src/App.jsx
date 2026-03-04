@@ -24,6 +24,7 @@ import JOB from "./components/JOBS/CrearJOB.jsx";
 import TablaFPY from "./components/Reportes/Dashboard.jsx";
 import TablaFPYPorDia from "./components/Reportes/Record.jsx"
 import ListaJobs from "./components/JOBS/JOBS.jsx";
+import FormMainBoard from "./components/RFQs/Mainboard.jsx";
 
 function ProtectedRoute({ isAuthenticated, children }) {
   if (!isAuthenticated) {
@@ -75,6 +76,8 @@ export default function App() {
                       <Route path="/Dashboard" element={<TablaFPY />} />
                       <Route path="/Record" element={<TablaFPYPorDia />} />
                       <Route path="/JOBS" element={<ListaJobs />} />
+                      <Route path="/Mainboard" element={<FormMainBoard />} />
+
 
 
 

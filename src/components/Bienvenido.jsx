@@ -53,6 +53,13 @@ function Bienvenido() {
             "Record"
           ]);
           break;
+          case "8":
+          setApartments([
+            "JOBS",
+            "Dashboard",
+            "Record"
+          ]);
+          break;
         case "5":
           setApartments([
             "Fallas",

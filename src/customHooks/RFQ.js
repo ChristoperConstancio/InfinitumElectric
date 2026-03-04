@@ -94,6 +94,28 @@ export async function buscarVFD(id) {
     }
 };
 
+export async function buscarMainBoard(id) {
+    try {
+        const db = getFirestore();
+        const optionsRef = collection(db, "Rechazos"); // Reemplaza "opciones" con el nombre de tu colección
+        const q = query(optionsRef, where("SN_MainBoard", "==", id));
+        const querySnapshot = await getDocs(q);
+
+        const optionsData = [];
+        if (querySnapshot.size <= 0) {
+
+            return false;
+        }
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            optionsData.push(data); // Ajusta según la estructura de tus documentos
+        });
+
+        return optionsData[0];
+    } catch (error) {
+        console.error("Error al obtener datos de Firebase:", error);
+    }
+};
 export async function addRechazos(data) {
     const db = getFirestore();
 
