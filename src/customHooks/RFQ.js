@@ -263,6 +263,64 @@ const calcularFPY = (liberados, rechazados) => {
     if (total === 0) return 100;
     return +(liberados / total * 100).toFixed(1);
 };
+
+export const getFPYGlobalPorMonth = async (month, year) => {
+    const db = getFirestore();
+
+    const q = query(
+        collection(db, "FPY"),
+        where("month", "==", Number(month)),
+        where("year", "==", Number(year))
+    );
+
+    const snap = await getDocs(q);
+
+    let liberados = 0;
+    let recuperadosST = 0;
+
+    let rechazados = { MT: 0, ST: 0, FI: 0 };
+
+    snap.forEach(docSnap => {
+        const fpy = docSnap.data();
+
+        recuperadosST += fpy.recuperado || 0;
+
+        lineas.forEach(l => {
+            liberados += fpy[`Liberados${l}`] || 0;
+
+            rechazados.MT += fpy[`Rechazados${l}MT`] || 0;
+            rechazados.ST += fpy[`Rechazados${l}ST`] || 0;
+            rechazados.FI += fpy[`Rechazados${l}FI`] || 0;
+        });
+    });
+
+    const fpyMT = calcularFPY(liberados, rechazados.MT);
+    const fpyST = calcularFPY(liberados, rechazados.ST);
+    const fpyFI = calcularFPY(liberados, rechazados.FI);
+
+    const rechazosFinalesST = Math.max(
+        rechazados.ST - recuperadosST,
+        0
+    );
+
+    const fstST =
+        liberados > 0
+            ? Number(
+                ((liberados - rechazosFinalesST) / liberados * 100).toFixed(1)
+            )
+            : 0;
+
+    return {
+        MT: { fpy: fpyMT, rechazos: rechazados.MT },
+        ST: {
+            fpy: fpyST,
+            fst: fstST,
+            rechazos: rechazados.ST,
+            recuperados: recuperadosST
+        },
+        FI: { fpy: fpyFI, rechazos: rechazados.FI }
+    };
+};
 export const getFPYGlobalPorWeek = async (week) => {
     const db = getFirestore();
 
@@ -461,6 +519,63 @@ export async function inactivateRFQ(id) {
         return false;
     }
 }
+
+export const getFPYGlobalPorYear = async (year) => {
+    const db = getFirestore();
+
+    const q = query(
+        collection(db, "FPY"),
+        where("year", "==", Number(year))
+    );
+
+    const snap = await getDocs(q);
+
+    let liberados = 0;
+    let recuperadosST = 0;
+
+    let rechazados = { MT: 0, ST: 0, FI: 0 };
+
+    snap.forEach(docSnap => {
+        const fpy = docSnap.data();
+
+        recuperadosST += fpy.recuperado || 0;
+
+        lineas.forEach(l => {
+            liberados += fpy[`Liberados${l}`] || 0;
+
+            rechazados.MT += fpy[`Rechazados${l}MT`] || 0;
+            rechazados.ST += fpy[`Rechazados${l}ST`] || 0;
+            rechazados.FI += fpy[`Rechazados${l}FI`] || 0;
+        });
+    });
+
+    const fpyMT = calcularFPY(liberados, rechazados.MT);
+    const fpyST = calcularFPY(liberados, rechazados.ST);
+    const fpyFI = calcularFPY(liberados, rechazados.FI);
+
+    const rechazosFinalesST = Math.max(
+        rechazados.ST - recuperadosST,
+        0
+    );
+
+    const fstST =
+        liberados > 0
+            ? Number(
+                ((liberados - rechazosFinalesST) / liberados * 100).toFixed(1)
+            )
+            : 0;
+
+    return {
+        MT: { fpy: fpyMT, rechazos: rechazados.MT },
+        ST: {
+            fpy: fpyST,
+            fst: fstST,
+            rechazos: rechazados.ST,
+            recuperados: recuperadosST
+        },
+        FI: { fpy: fpyFI, rechazos: rechazados.FI }
+    };
+};
 export async function fetchRFQPiezasEditar(id) {
     try {
         const db = getFirestore();
