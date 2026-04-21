@@ -1,4 +1,4 @@
-import { getFirestore, collection, query, where, getDocs, addDoc, doc, updateDoc, runTransaction, setDoc, getDoc, increment } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, addDoc, doc, updateDoc, runTransaction, setDoc, getDoc, increment, serverTimestamp } from "firebase/firestore";
 
 const lineas = ["L1", "L2", "L3", "LSA"];
 
@@ -26,6 +26,87 @@ export async function obtenerFolioUnico() {
     return String(nuevoFolio).padStart(6, "0");
 }
 
+
+export const guardarRecibo = async (data) => {
+  const db = getFirestore();
+  const now = new Date();
+
+  try {
+    const partId = data.partNo.trim().toUpperCase();
+    const partRef = doc(db, "Componentes", partId);
+
+    // 🔥 1. Leer arribos actuales
+    const snap = await getDoc(partRef);
+
+    let arribos = 1;
+
+    if (snap.exists()) {
+      const current = snap.data().arribos || 0;
+      arribos = current + 1;
+    }
+
+    // 🔥 2. Guardar/actualizar componente
+    await setDoc(partRef, {
+      'Part No': partId,
+      Rev: data.rev || "",
+      arribos,
+      CreatedAt: now.toLocaleString("es-MX")
+    }, { merge: true });
+
+    // 🔥 3. Guardar recibo con el ARRIBO ACTUAL
+    const docRef = await addDoc(collection(db, "Recibos"), {
+      ...data,
+      partNo: partId,
+      qty: Number(data.qty),
+      arribos, // 👈 AQUÍ lo guardas
+      createdAt: now.toLocaleString("es-MX"),
+    });
+
+    return { ok: true, id: docRef.id };
+
+  } catch (error) {
+    console.error("Error:", error);
+    return { ok: false, error };
+  }
+};
+export const getRecibos = async (filters) => {
+  const db = getFirestore();
+
+  try {
+    let ref = collection(db, "Recibos");
+    let conditions = [];
+
+    if (filters.partNo) {
+      conditions.push(where("partNo", "==", filters.partNo));
+    }
+
+    if (filters.pl) {
+      conditions.push(where("pl", "==", filters.pl));
+    }
+
+    if (filters.po) {
+      conditions.push(where("po", "==", filters.po));
+    }
+
+    if (filters.month) {
+      conditions.push(where("Month", "==", filters.month));
+    }
+
+    const q = conditions.length ? query(ref, ...conditions) : ref;
+
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+  } catch (error) {
+    console.error("Error obteniendo recibos:", error);
+    return [];
+  }
+};
+
 export async function fetchRechazos(fecha) {
     try {
         const db = getFirestore();
@@ -34,12 +115,12 @@ export async function fetchRechazos(fecha) {
         const q = query(optionsRef, where("Fecha", "==", fecha));
 
         const querySnapshot = await getDocs(q);
-        
+
 
         const optionsData = [];
         querySnapshot.forEach((doc) => {
             optionsData.push({
-                id:doc.id,
+                id: doc.id,
                 ...doc.data()
             }); // Ajusta según la estructura de tus documentos
         });
@@ -731,18 +812,18 @@ export async function getJobsActivas() {
 export const cerrarJob = async (jobId) => {
     const db = getFirestore();
 
-  try {
-    const jobRef = doc(db, "JOBS", jobId);
+    try {
+        const jobRef = doc(db, "JOBS", jobId);
 
-    await updateDoc(jobRef, {
-      Status: "Cerrada",
-    });
+        await updateDoc(jobRef, {
+            Status: "Cerrada",
+        });
 
-    return true;
-  } catch (error) {
-    console.error("Error cerrando job:", error);
-    throw error;
-  }
+        return true;
+    } catch (error) {
+        console.error("Error cerrando job:", error);
+        throw error;
+    }
 };
 
 export async function sumarLiberadoAJOB(jobId) {

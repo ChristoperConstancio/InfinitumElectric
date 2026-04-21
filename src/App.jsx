@@ -25,6 +25,8 @@ import TablaFPY from "./components/Reportes/Dashboard.jsx";
 import TablaFPYPorDia from "./components/Reportes/Record.jsx"
 import ListaJobs from "./components/JOBS/JOBS.jsx";
 import FormMainBoard from "./components/RFQs/Mainboard.jsx";
+import Recibo from "./components/Incoming/Recibo.jsx";
+import NuevoRecibo from "./components/Incoming/NuevoRecibo.jsx";
 
 function ProtectedRoute({ isAuthenticated, children }) {
   if (!isAuthenticated) {
@@ -77,6 +79,10 @@ export default function App() {
                       <Route path="/Record" element={<TablaFPYPorDia />} />
                       <Route path="/JOBS" element={<ListaJobs />} />
                       <Route path="/Mainboard" element={<FormMainBoard />} />
+                      <Route path="/Recibo" element={<Recibo />} />
+                      <Route path="/AgregarRecibo" element={<NuevoRecibo />} />
+
+
 
 
 

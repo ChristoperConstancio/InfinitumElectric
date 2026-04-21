@@ -26,7 +26,8 @@ function Bienvenido() {
             "Envios",
             "JOBS",
             "Dashboard",
-            "Record"
+            "Record",
+            "Recibo"
           ]);
           break;
 
