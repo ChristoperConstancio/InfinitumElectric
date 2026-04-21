@@ -70,6 +70,11 @@ function Bienvenido() {
             "Record"
           ]);
           break;
+                  case "6":
+          setApartments([
+            "Recibo"
+          ]);
+          break;
         default:
           setApartments([
             "Fallas",
