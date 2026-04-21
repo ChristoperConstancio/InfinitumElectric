@@ -85,47 +85,47 @@ export default function TablaFPY() {
     data.Total.Liberados,
     data.Total.FI
   );
-useEffect(() => {
-  if (!fecha) return;
+  useEffect(() => {
+    if (!fecha) return;
 
-  const cargarFPY = async () => {
-    const ref = doc(db, "FPY", fecha);
-    const snap = await getDoc(ref);
+    const cargarFPY = async () => {
+      const ref = doc(db, "FPY", fecha);
+      const snap = await getDoc(ref);
 
-    const resultado = crearEstructuraFPY(lineas);
+      const resultado = crearEstructuraFPY(lineas);
 
-    if (snap.exists()) {
-      const fpy = snap.data();
-      const recuperados = fpy['recuperado'] || 0; // ✅ ahora sí existe
+      if (snap.exists()) {
+        const fpy = snap.data();
+        const recuperados = fpy['recuperado'] || 0; // ✅ ahora sí existe
 
-      lineas.forEach(l => {
-        const liberados = fpy[`Liberados${l}`] || 0;
-        const mt = fpy[`Rechazados${l}MT`] || 0;
-        const st = fpy[`Rechazados${l}ST`] || 0;
-        const fi = fpy[`Rechazados${l}FI`] || 0;
+        lineas.forEach(l => {
+          const liberados = fpy[`Liberados${l}`] || 0;
+          const mt = fpy[`Rechazados${l}MT`] || 0;
+          const st = fpy[`Rechazados${l}ST`] || 0;
+          const fi = fpy[`Rechazados${l}FI`] || 0;
 
-        resultado.Liberados[l] = liberados;
-        resultado.MT[l] = mt;
-        resultado.ST[l] = st;
-        resultado.FI[l] = fi;
+          resultado.Liberados[l] = liberados;
+          resultado.MT[l] = mt;
+          resultado.ST[l] = st;
+          resultado.FI[l] = fi;
 
-        resultado.Total.Liberados += liberados;
-        resultado.Total.MT += mt;
-        resultado.Total.ST += st;
-        resultado.Total.FI += fi;
-      });
+          resultado.Total.Liberados += liberados;
+          resultado.Total.MT += mt;
+          resultado.Total.ST += st;
+          resultado.Total.FI += fi;
+        });
 
-      resultado.Total.Recuperados = recuperados;
-    }
+        resultado.Total.Recuperados = recuperados;
+      }
 
-    setData(resultado);
-  };
+      setData(resultado);
+    };
 
-  cargarFPY();
-  const interval = setInterval(cargarFPY, 5 * 60 * 1000);
-  return () => clearInterval(interval);
+    cargarFPY();
+    const interval = setInterval(cargarFPY, 5 * 60 * 1000);
+    return () => clearInterval(interval);
 
-}, [fecha]);
+  }, [fecha]);
   /* ================= KPI ADHERENCIA ================= */
 
   const META_TURNO = 142;
@@ -325,6 +325,7 @@ useEffect(() => {
               <th className="px-4 py-3 text-center">FPY MT %</th>
               <th className="px-4 py-3 text-center">FPY ST %</th>
               <th className="px-4 py-3 text-center">FPY FI %</th>
+              <th className="px-4 py-3 text-center">Liberados</th>
             </tr>
           </thead>
 
@@ -357,7 +358,9 @@ useEffect(() => {
                     {fpyFILinea}% ({data.FI[l]})
                   </td>
 
-
+                  <td className="px-4 py-3 text-center font-bold text-blue-400">
+                    {data.Liberados[l]}
+                  </td>
                 </tr>
               );
             })}
