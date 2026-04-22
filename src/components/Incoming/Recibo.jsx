@@ -69,7 +69,7 @@ function Recibo() {
 
     useEffect(() => {
         const tipoUsuario = localStorage.getItem('tipo')
-        if (tipoUsuario == '1' || tipoUsuario == '2') {
+        if (tipoUsuario == '1' || tipoUsuario == '6') {
             setButtonsState(true)
         }
     }, [])
