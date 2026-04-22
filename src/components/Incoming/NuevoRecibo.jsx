@@ -14,6 +14,7 @@ function NuevoRecibo() {
     plexDate: "",
     qty: "",
     serialPlex: "",
+    diasDif: "",
     supplier: "",
     materialista: "",
     numeroRecibo: "",
@@ -168,6 +169,8 @@ const diasDiferencia = (() => {
           <input
             type="text"
             value={diasDiferencia}
+            onChange={handleChange}
+            name="diasDif"
             readOnly
             className="w-full bg-gray-700 border border-gray-600 p-2 rounded"
           />
