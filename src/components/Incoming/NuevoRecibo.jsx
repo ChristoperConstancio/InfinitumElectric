@@ -11,6 +11,7 @@ function NuevoRecibo() {
     um: "",
     packingList: "",
     po: "",
+    plexDate: "",
     qty: "",
     serialPlex: "",
     supplier: "",
@@ -22,6 +23,7 @@ function NuevoRecibo() {
     arrivalDate: "",
     costUnit: "",
     comentarios: "",
+    status: "Recibido",
   });
 
   // 🔥 Traer materialista desde localStorage
@@ -58,7 +60,17 @@ function NuevoRecibo() {
       [name]: value
     });
   };
+const diasDiferencia = (() => {
+  if (!form.arrivalDate || !form.plexDate) return "";
 
+  const llegada = new Date(form.arrivalDate);
+  const plex = new Date(form.plexDate);
+
+  const diffTime = llegada - plex;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return diffDays;
+})();
   const handleSubmit = async (e) => {
     e.preventDefault();
     const now = new Date();
@@ -124,25 +136,48 @@ function NuevoRecibo() {
             value={form.invoiceDate}
             onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
+            required
           />
         </div>
         {/* JTSD Trailer */}
-        <div>
-          <label className="block text-sm mb-1">ID Trailer</label>
-          <input
-            type="text"
-            name="idTrailer"
-            value={form.idTrailer}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-          />
-        </div>
+
         <div>
           <label className="block text-sm mb-1">Fecha de llegada</label>
           <input
             type="date"
             name="arrivalDate"
             value={form.arrivalDate}
+            onChange={handleChange}
+            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Fecha de recibo PLEX</label>
+          <input
+            type="date"
+            name="plexDate"
+            value={form.plexDate}
+            onChange={handleChange}
+            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Días de diferencia</label>
+          <input
+            type="text"
+            value={diasDiferencia}
+            readOnly
+            className="w-full bg-gray-700 border border-gray-600 p-2 rounded"
+          />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">ID Trailer</label>
+          <input
+            type="text"
+            name="idTrailer"
+            value={form.idTrailer}
             onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
           />
@@ -156,6 +191,7 @@ function NuevoRecibo() {
             value={form.packingList}
             onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
+            required
           />
         </div>
         {/* Part Number */}
@@ -192,6 +228,7 @@ function NuevoRecibo() {
             value={form.um}
             onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
+            required
           />
         </div>
         {/* Cantidad */}
@@ -200,7 +237,7 @@ function NuevoRecibo() {
           <input
             type="number"
             name="qtyInvoice"
-            value={form.qty}
+            value={form.qtyInvoice}
             onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
             required
@@ -213,7 +250,7 @@ function NuevoRecibo() {
           <input
             type="number"
             name="qtyFisica"
-            value={form.qty}
+            value={form.qtyFisica}
             onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
             required
@@ -239,6 +276,7 @@ function NuevoRecibo() {
             value={form.po}
             onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
+            required
           />
         </div>
 
@@ -253,6 +291,7 @@ function NuevoRecibo() {
             value={form.serialPlex}
             onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
+            required
           />
         </div>
 
