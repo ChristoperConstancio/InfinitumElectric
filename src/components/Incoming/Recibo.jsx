@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import add from '../../assets/add.png'
 import view from '../../assets/view.png'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { getRecibos } from '../../customHooks/RFQ'
 
 function Recibo() {
+    const navigate = useNavigate()
+
     const [filteredData, setFilteredData] = useState([])
     const [selectedRow, setSelectedRow] = useState()
     const [buttons, setButtonsState] = useState(false)
@@ -19,6 +21,10 @@ function Recibo() {
 
     const toggleCheckbox = (item) => {
         setSelectedRow(item.id)
+    }
+
+    const handleDoubleClick = (item) => {
+        navigate(`/EditarRecibo/${item.id}`)
     }
 
     const handleChange = (e) => {
@@ -83,6 +89,11 @@ function Recibo() {
                     <h1 className="text-3xl font-bold tracking-wide">Recibo</h1>
                     <p className="text-gray-400">Warehouse</p>
                 </div>
+            </div>
+
+            {/* 🔹 Hint UX */}
+            <div className="px-12 text-gray-400 text-sm pt-2">
+                Doble click en un registro para editar
             </div>
 
             {/* 🔹 Filtros */}
@@ -155,9 +166,16 @@ function Recibo() {
                             <span className="text-sm font-semibold">Nuevo</span>
                         </Link>
 
-                        <button className="bg-indigo-600 hover:bg-indigo-700 rounded-lg px-4 py-2 flex items-center space-x-2 shadow-md">
-                            <img src={view} alt="Ver" className="h-5 w-5" />
-                            <span className="text-sm font-semibold">Ver</span>
+                        <button
+                            disabled={!selectedRow}
+                            onClick={() => navigate(`/EditarRecibo/${selectedRow}`)}
+                            className={`rounded-lg px-4 py-2 flex items-center space-x-2 shadow-md 
+                                ${selectedRow 
+                                    ? 'bg-yellow-500 hover:bg-yellow-600' 
+                                    : 'bg-gray-600 cursor-not-allowed'}`}
+                        >
+                            <img src={view} alt="Editar" className="h-5 w-5" />
+                            <span className="text-sm font-semibold">Editar</span>
                         </button>
                     </>
                 )}
@@ -194,11 +212,16 @@ function Recibo() {
                                 <tr
                                     key={item.id}
                                     onClick={() => toggleCheckbox(item)}
+                                    onDoubleClick={() => handleDoubleClick(item)}
                                     className={`
-                        border-b border-gray-700
-                        ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-900'}
-                        hover:bg-gray-700 cursor-pointer
-                    `}
+                                        border-b border-gray-700
+                                        ${selectedRow === item.id 
+                                            ? 'bg-blue-800' 
+                                            : index % 2 === 0 
+                                                ? 'bg-gray-800' 
+                                                : 'bg-gray-900'}
+                                        hover:bg-gray-700 cursor-pointer
+                                    `}
                                 >
                                     <td className="p-3 text-left truncate">{item.createdAt}</td>
                                     <td className="p-3 text-left truncate">{item.partNo}</td>

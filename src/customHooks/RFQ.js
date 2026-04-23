@@ -107,6 +107,31 @@ export const getRecibos = async (filters) => {
   }
 };
 
+export const getReciboById = async (id) => {
+  const db = getFirestore();
+
+  try {
+    const ref = doc(db, "Recibos", id); // 👈 referencia directa
+    const snapshot = await getDoc(ref);
+
+    if (!snapshot.exists()) {
+      console.warn("⚠️ No existe el documento");
+      return null;
+    }
+    console.log("verificado")
+
+    return {
+      id: snapshot.id,
+      ...snapshot.data()
+    };
+  } catch (error) {
+    console.error("❌ Error obteniendo recibo:", error);
+    return null;
+  }
+};
+export const updateRecibo = async (filters) => {
+
+};
 export async function fetchRechazos(fecha) {
     try {
         const db = getFirestore();

@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { guardarRecibo } from "../../customHooks/RFQ";
+import { useNavigate, useParams } from "react-router-dom";
+import { guardarRecibo, getReciboById, updateRecibo } from "../../customHooks/RFQ";
 
 function NuevoRecibo() {
   const navigate = useNavigate();
+  const { id } = useParams(); // 👈 clave
+  const isEdit = Boolean(id);
 
   const [form, setForm] = useState({
     partNo: "",
@@ -14,6 +16,7 @@ function NuevoRecibo() {
     plexDate: "",
     qty: "",
     serialPlex: "",
+    shipperNo: "",
     diasDif: "",
     supplier: "",
     materialista: "",
@@ -24,71 +27,80 @@ function NuevoRecibo() {
     arrivalDate: "",
     costUnit: "",
     comentarios: "",
-    status: "Recibido",
+    status: "pendiente",
+    tipoMaterial: "materia_prima",
   });
 
-  // 🔥 Traer materialista desde localStorage
+  // 🔥 Traer materialista
   useEffect(() => {
-    const nombre = localStorage.getItem("username"); // 👈 asegúrate del key
-    if (nombre) {
+    const nombre = localStorage.getItem("username");
+    if (nombre && !isEdit) {
       setForm(prev => ({
         ...prev,
         materialista: nombre
       }));
     }
-  }, []);
+  }, [isEdit]);
+
+  // 🔥 Cargar datos si es edición
+  useEffect(() => {
+    if (isEdit) {
+      const fetchData = async () => {
+        const data = await getReciboById(id);
+        console.log("Data: " + data)        
+        setForm(data);
+
+      };
+      fetchData();
+    }
+  }, [id, isEdit]);
 
   const getMonthString = () => {
-    const fecha = new Date()
-
+    const fecha = new Date();
     const meses = [
-      "Enero", "Febrero", "Marzo", "Abril",
-      "Mayo", "Junio", "Julio", "Agosto",
-      "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    ]
+      "Enero","Febrero","Marzo","Abril",
+      "Mayo","Junio","Julio","Agosto",
+      "Septiembre","Octubre","Noviembre","Diciembre"
+    ];
+    return `${meses[fecha.getMonth()]}-${fecha.getFullYear()}`;
+  };
 
-    const mes = meses[fecha.getMonth()]
-    const year = fecha.getFullYear()
-
-    return `${mes}-${year}`
-  }
-  // 🔹 Manejo de inputs
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setForm({
-      ...form,
+    setForm(prev => ({
+      ...prev,
       [name]: value
-    });
+    }));
   };
-const diasDiferencia = (() => {
-  if (!form.arrivalDate || !form.plexDate) return "";
 
-  const llegada = new Date(form.arrivalDate);
-  const plex = new Date(form.plexDate);
+  const diasDiferencia = (() => {
+    if (!form.arrivalDate || !form.plexDate) return "";
+    const diff = new Date(form.arrivalDate) - new Date(form.plexDate);
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  })();
 
-  const diffTime = llegada - plex;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  return diffDays;
-})();
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const now = new Date();
 
-    const dataToSave = {
-      ...form,
-      qty: Number(form.qty),
+    let response;
 
-      // 🔥 fecha automática desde el componente
-      createdAt: now.toLocaleString("es-MX"),
-      Month: getMonthString()
-    };
-
-    const response = await guardarRecibo(dataToSave);
+    if (isEdit) {
+      // 🔥 UPDATE
+      response = await updateRecibo(id, {
+        ...form,
+        qty: Number(form.qty)
+      });
+    } else {
+      // 🔥 CREATE
+      response = await guardarRecibo({
+        ...form,
+        qty: Number(form.qty),
+        createdAt: new Date().toLocaleString("es-MX"),
+        Month: getMonthString()
+      });
+    }
 
     if (response.ok) {
-      console.log("✅ Guardado");
       navigate("/recibo");
     } else {
       console.error("❌ Error");
@@ -100,272 +112,85 @@ const diasDiferencia = (() => {
 
       {/* Header */}
       <div className="px-12 py-6 border-b border-gray-700">
-        <h1 className="text-3xl font-bold">Nuevo Recibo</h1>
+        <h1 className="text-3xl font-bold">
+          {isEdit ? "Editar Recibo" : "Nuevo Recibo"}
+        </h1>
         <p className="text-gray-400">Captura de material</p>
       </div>
 
-      {/* Formulario */}
       <form onSubmit={handleSubmit} className="px-12 py-6 grid grid-cols-2 gap-6">
+
         {/* Numero de recibo */}
         <div>
           <label className="block text-sm mb-1">Numero de recibo</label>
-          <input
-            type="text"
-            name="numeroRecibo"
-            value={form.numeroRecibo}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-          />
+          <input name="numeroRecibo" value={form.numeroRecibo} onChange={handleChange}
+            className="w-full bg-gray-800 border p-2 rounded" />
         </div>
+
+        {/* Invoice */}
         <div>
           <label className="block text-sm mb-1">Invoice</label>
-          <input
-            type="text"
-            name="invoice"
-            value={form.invoice}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-          />
+          <input name="invoice" value={form.invoice} onChange={handleChange}
+            className="w-full bg-gray-800 border p-2 rounded" />
         </div>
 
-        {/*  Invoice Date*/}
+        {/* Fechas */}
         <div>
-          <label className="block text-sm mb-1">Fecha de factura</label>
-          <input
-            type="date"
-            name="invoiceDate"
-            value={form.invoiceDate}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-            required
-          />
+          <label>Fecha factura</label>
+          <input type="date" name="invoiceDate" value={form.invoiceDate} onChange={handleChange}
+            className="w-full bg-gray-800 border p-2 rounded" />
         </div>
-        {/* JTSD Trailer */}
 
         <div>
-          <label className="block text-sm mb-1">Fecha de llegada</label>
-          <input
-            type="date"
-            name="arrivalDate"
-            value={form.arrivalDate}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Fecha de recibo PLEX</label>
-          <input
-            type="date"
-            name="plexDate"
-            value={form.plexDate}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Días de diferencia</label>
-          <input
-            type="text"
-            value={diasDiferencia}
-            onChange={handleChange}
-            name="diasDif"
-            readOnly
-            className="w-full bg-gray-700 border border-gray-600 p-2 rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">ID Trailer</label>
-          <input
-            type="text"
-            name="idTrailer"
-            value={form.idTrailer}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-          />
-        </div>
-        {/* Packing List */}
-        <div>
-          <label className="block text-sm mb-1">Packing List</label>
-          <input
-            type="text"
-            name="packingList"
-            value={form.packingList}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-            required
-          />
-        </div>
-        {/* Part Number */}
-        <div>
-          <label className="block text-sm mb-1">Part Number</label>
-          <input
-            type="text"
-            name="partNo"
-            value={form.partNo}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-            required
-          />
+          <label>Fecha llegada</label>
+          <input type="date" name="arrivalDate" value={form.arrivalDate} onChange={handleChange}
+            className="w-full bg-gray-800 border p-2 rounded" />
         </div>
 
-        {/* Rev */}
-        <div>
-          <label className="block text-sm mb-1">Rev</label>
-          <input
-            type="text"
-            name="rev"
-            value={form.rev}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-          />
-        </div>
+        {/* Campos principales */}
+        <input name="partNo" value={form.partNo} onChange={handleChange} placeholder="Part No"
+          className="bg-gray-800 p-2 rounded" />
 
-        {/* U/M */}
-        <div>
-          <label className="block text-sm mb-1">U/M</label>
-          <input
-            type="text"
-            name="um"
-            value={form.um}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-            required
-          />
-        </div>
-        {/* Cantidad */}
-        <div>
-          <label className="block text-sm mb-1">Cantidad Factura</label>
-          <input
-            type="number"
-            name="qtyInvoice"
-            value={form.qtyInvoice}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-            required
-          />
-        </div>
+        <input name="packingList" value={form.packingList} onChange={handleChange} placeholder="Packing List"
+          className="bg-gray-800 p-2 rounded" />
 
-        {/* Cantidad */}
-        <div>
-          <label className="block text-sm mb-1">Cantidad Fisica</label>
-          <input
-            type="number"
-            name="qtyFisica"
-            value={form.qtyFisica}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-            required
-          />
-        </div>
-        {/* Cost Unit */}
-        <div>
-          <label className="block text-sm mb-1">Cost Unit</label>
-          <input
-            type="text"
-            name="costUnit"
-            value={form.costUnit}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-          />
-        </div>
-        {/* PO */}
-        <div>
-          <label className="block text-sm mb-1">PO</label>
-          <input
-            type="text"
-            name="po"
-            value={form.po}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-            required
-          />
-        </div>
+        <input name="po" value={form.po} onChange={handleChange} placeholder="PO"
+          className="bg-gray-800 p-2 rounded" />
 
+        {/* Status */}
+        <select name="status" value={form.status} onChange={handleChange}
+          className="bg-gray-800 p-2 rounded">
+          <option value="pendiente">Pendiente</option>
+          <option value="completado">Completado</option>
+          <option value="capturado">Capturado</option>
+          <option value="transferencia">Transferencia</option>
+        </select>
 
+        {/* Tipo material */}
+        <select name="tipoMaterial" value={form.tipoMaterial} onChange={handleChange}
+          className="bg-gray-800 p-2 rounded">
+          <option value="materia_prima">Materia Prima</option>
+          <option value="materia_prima_definitiva">Materia Prima Definitiva</option>
+        </select>
 
-        {/* Serial Plex */}
-        <div>
-          <label className="block text-sm mb-1">Serial Plex</label>
-          <input
-            type="text"
-            name="serialPlex"
-            value={form.serialPlex}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-            required
-          />
-        </div>
+        {/* Dias */}
+        <input value={diasDiferencia} readOnly
+          className="bg-gray-700 p-2 rounded" />
 
-        {/* Supplier */}
-        <div>
-          <label className="block text-sm mb-1">Supplier</label>
-          <input
-            type="text"
-            name="supplier"
-            value={form.supplier}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-          />
-        </div>
-
-
-        {/*   invoice */}
-
-
-        {/* Arrival Date */}
-
-        {/* Packing list */}
-        <div>
-          <label className="block text-sm mb-1">Packing List</label>
-          <input
-            type="text"
-            name="packingList"
-            value={form.packingList}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-          />
-        </div>
-
-        {/* Comentarios */}
-        <div>
-          <label className="block text-sm mb-1">Comentarios</label>
-          <input
-            type="text"
-            name="comentarios"
-            value={form.comentarios}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-          />
-        </div>
-
-        {/* Materialista (solo lectura) */}
-        <div className="col-span-2">
-          <label className="block text-sm mb-1">Materialista</label>
-          <input
-            type="text"
-            value={form.materialista}
-            readOnly
-            className="w-full bg-gray-700 border border-gray-600 p-2 rounded"
-          />
-        </div>
+        {/* Materialista */}
+        <input value={form.materialista} readOnly
+          className="bg-gray-700 p-2 rounded col-span-2" />
 
         {/* Botones */}
-        <div className="col-span-2 flex justify-end space-x-4 mt-4">
-          <button
-            type="button"
-            onClick={() => navigate("/recibo")}
-            className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded"
-          >
+        <div className="col-span-2 flex justify-end space-x-4">
+          <button type="button" onClick={() => navigate("/recibo")}
+            className="bg-gray-600 px-4 py-2 rounded">
             Cancelar
           </button>
 
-          <button
-            type="submit"
-            className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded"
-          >
-            Guardar
+          <button type="submit"
+            className="bg-green-500 px-4 py-2 rounded">
+            {isEdit ? "Actualizar" : "Guardar"}
           </button>
         </div>
 
