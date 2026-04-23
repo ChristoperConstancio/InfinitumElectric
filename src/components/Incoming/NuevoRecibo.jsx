@@ -4,7 +4,7 @@ import { guardarRecibo, getReciboById, updateRecibo } from "../../customHooks/RF
 
 function NuevoRecibo() {
   const navigate = useNavigate();
-  const { id } = useParams(); // 👈 clave
+  const { id } = useParams();
   const isEdit = Boolean(id);
 
   const [form, setForm] = useState({
@@ -31,25 +31,22 @@ function NuevoRecibo() {
     tipoMaterial: "materia_prima",
   });
 
-  // 🔥 Traer materialista
+  // 🔥 Materialista (solo en creación)
   useEffect(() => {
-    const nombre = localStorage.getItem("username");
-    if (nombre && !isEdit) {
-      setForm(prev => ({
-        ...prev,
-        materialista: nombre
-      }));
+    if (!isEdit) {
+      const nombre = localStorage.getItem("username");
+      if (nombre) {
+        setForm(prev => ({ ...prev, materialista: nombre }));
+      }
     }
   }, [isEdit]);
 
-  // 🔥 Cargar datos si es edición
+  // 🔥 Cargar datos en edición
   useEffect(() => {
     if (isEdit) {
       const fetchData = async () => {
         const data = await getReciboById(id);
-        console.log("Data: " + data)        
-        setForm(data);
-
+        if (data) setForm(data);
       };
       fetchData();
     }
@@ -58,9 +55,9 @@ function NuevoRecibo() {
   const getMonthString = () => {
     const fecha = new Date();
     const meses = [
-      "Enero","Febrero","Marzo","Abril",
-      "Mayo","Junio","Julio","Agosto",
-      "Septiembre","Octubre","Noviembre","Diciembre"
+      "Enero", "Febrero", "Marzo", "Abril",
+      "Mayo", "Junio", "Julio", "Agosto",
+      "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
     return `${meses[fecha.getMonth()]}-${fecha.getFullYear()}`;
   };
@@ -120,76 +117,85 @@ function NuevoRecibo() {
 
       <form onSubmit={handleSubmit} className="px-12 py-6 grid grid-cols-2 gap-6">
 
-        {/* Numero de recibo */}
-        <div>
-          <label className="block text-sm mb-1">Numero de recibo</label>
-          <input name="numeroRecibo" value={form.numeroRecibo} onChange={handleChange}
-            className="w-full bg-gray-800 border p-2 rounded" />
-        </div>
-
-        {/* Invoice */}
-        <div>
-          <label className="block text-sm mb-1">Invoice</label>
-          <input name="invoice" value={form.invoice} onChange={handleChange}
-            className="w-full bg-gray-800 border p-2 rounded" />
-        </div>
-
-        {/* Fechas */}
-        <div>
-          <label>Fecha factura</label>
-          <input type="date" name="invoiceDate" value={form.invoiceDate} onChange={handleChange}
-            className="w-full bg-gray-800 border p-2 rounded" />
-        </div>
+        <input name="numeroRecibo" value={form.numeroRecibo} onChange={handleChange} placeholder="Número de recibo" className="bg-gray-800 p-2 rounded" />
+        <input name="invoice" value={form.invoice} onChange={handleChange} placeholder="Invoice" className="bg-gray-800 p-2 rounded" />
 
         <div>
-          <label>Fecha llegada</label>
-          <input type="date" name="arrivalDate" value={form.arrivalDate} onChange={handleChange}
-            className="w-full bg-gray-800 border p-2 rounded" />
+          <label className="block text-sm mb-1">Fecha de factura</label>
+          <input
+            type="date"
+            name="invoiceDate"
+            value={form.invoiceDate}
+            onChange={handleChange}
+            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
+          />
         </div>
+        <div>
+          <label className="block text-sm mb-1">Fecha de factura</label>
+          <input
+            type="date"
+            name="invoiceDate"
+            value={form.invoiceDate}
+            onChange={handleChange}
+            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
+          />
+        </div>
+        <input name="idTrailer" value={form.idTrailer} onChange={handleChange} placeholder="ID Trailer" className="bg-gray-800 p-2 rounded" />
+        <input name="packingList" value={form.packingList} onChange={handleChange} placeholder="Packing List" className="bg-gray-800 p-2 rounded" />
 
-        {/* Campos principales */}
-        <input name="partNo" value={form.partNo} onChange={handleChange} placeholder="Part No"
-          className="bg-gray-800 p-2 rounded" />
+        <input name="partNo" value={form.partNo} onChange={handleChange} placeholder="Part No" className="bg-gray-800 p-2 rounded" />
+        <input name="rev" value={form.rev} onChange={handleChange} placeholder="Rev" className="bg-gray-800 p-2 rounded" />
 
-        <input name="packingList" value={form.packingList} onChange={handleChange} placeholder="Packing List"
-          className="bg-gray-800 p-2 rounded" />
+        <input name="um" value={form.um} onChange={handleChange} placeholder="U/M" className="bg-gray-800 p-2 rounded" />
 
-        <input name="po" value={form.po} onChange={handleChange} placeholder="PO"
-          className="bg-gray-800 p-2 rounded" />
+        <input type="number" name="qtyInvoice" value={form.qtyInvoice} onChange={handleChange} placeholder="Qty Factura" className="bg-gray-800 p-2 rounded" />
+        <input type="number" name="qtyFisica" value={form.qtyFisica} onChange={handleChange} placeholder="Qty Física" className="bg-gray-800 p-2 rounded" />
 
-        {/* Status */}
-        <select name="status" value={form.status} onChange={handleChange}
-          className="bg-gray-800 p-2 rounded">
+        <input name="costUnit" value={form.costUnit} onChange={handleChange} placeholder="Cost Unit" className="bg-gray-800 p-2 rounded" />
+        <input name="po" value={form.po} onChange={handleChange} placeholder="PO" className="bg-gray-800 p-2 rounded" />
+
+        <input name="shipperNo" value={form.shipperNo} onChange={handleChange} placeholder="Shipper No" className="bg-gray-800 p-2 rounded" />
+        <input name="supplier" value={form.supplier} onChange={handleChange} placeholder="Supplier" className="bg-gray-800 p-2 rounded" />
+
+        {/* Fecha recibo PLEX */}
+        <div>
+          <label className="block text-sm mb-1">Fecha recibo PLEX</label>
+          <input
+            type="date"
+            name="plexDate"
+            value={form.plexDate}
+            onChange={handleChange}
+            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
+          />
+        </div>        <input name="serialPlex" value={form.serialPlex} onChange={handleChange} placeholder="Serial Plex" className="bg-gray-800 p-2 rounded" />
+
+        <input name="comentarios" value={form.comentarios} onChange={handleChange} placeholder="Comentarios" className="bg-gray-800 p-2 rounded" />
+
+        <input value={diasDiferencia} readOnly className="bg-gray-700 p-2 rounded" />
+
+        {/* STATUS */}
+        <select name="status" value={form.status} onChange={handleChange} className="bg-gray-800 p-2 rounded">
           <option value="pendiente">Pendiente</option>
           <option value="completado">Completado</option>
           <option value="capturado">Capturado</option>
           <option value="transferencia">Transferencia</option>
         </select>
 
-        {/* Tipo material */}
-        <select name="tipoMaterial" value={form.tipoMaterial} onChange={handleChange}
-          className="bg-gray-800 p-2 rounded">
+        {/* TIPO MATERIAL */}
+        <select name="tipoMaterial" value={form.tipoMaterial} onChange={handleChange} className="bg-gray-800 p-2 rounded">
           <option value="materia_prima">Materia Prima</option>
           <option value="materia_prima_definitiva">Materia Prima Definitiva</option>
         </select>
 
-        {/* Dias */}
-        <input value={diasDiferencia} readOnly
-          className="bg-gray-700 p-2 rounded" />
+        <input value={form.materialista} readOnly className="bg-gray-700 p-2 rounded col-span-2" />
 
-        {/* Materialista */}
-        <input value={form.materialista} readOnly
-          className="bg-gray-700 p-2 rounded col-span-2" />
-
-        {/* Botones */}
+        {/* BOTONES */}
         <div className="col-span-2 flex justify-end space-x-4">
-          <button type="button" onClick={() => navigate("/recibo")}
-            className="bg-gray-600 px-4 py-2 rounded">
+          <button type="button" onClick={() => navigate("/recibo")} className="bg-gray-600 px-4 py-2 rounded">
             Cancelar
           </button>
 
-          <button type="submit"
-            className="bg-green-500 px-4 py-2 rounded">
+          <button type="submit" className="bg-green-500 px-4 py-2 rounded">
             {isEdit ? "Actualizar" : "Guardar"}
           </button>
         </div>
