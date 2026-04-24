@@ -118,7 +118,7 @@ function NuevoRecibo() {
       <form onSubmit={handleSubmit} className="px-12 py-6 grid grid-cols-2 gap-6">
 
         <input name="numeroRecibo" value={form.numeroRecibo} onChange={handleChange} placeholder="Número de recibo" className="bg-gray-800 p-2 rounded" />
-        <input name="invoice" value={form.invoice} onChange={handleChange} placeholder="Invoice" className="bg-gray-800 p-2 rounded" />
+        <input name="invoice" value={form.invoice} onChange={handleChange} placeholder="Numero factura" className="bg-gray-800 p-2 rounded" />
 
         <div>
           <label className="block text-sm mb-1">Fecha de factura</label>
@@ -131,11 +131,11 @@ function NuevoRecibo() {
           />
         </div>
         <div>
-          <label className="block text-sm mb-1">Fecha de factura</label>
+          <label className="block text-sm mb-1">Fecha de llegada</label>
           <input
             type="date"
-            name="invoiceDate"
-            value={form.invoiceDate}
+            name="arrivalDate"
+            value={form.arrivalDate}
             onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
           />
@@ -151,8 +151,21 @@ function NuevoRecibo() {
         <input type="number" name="qtyInvoice" value={form.qtyInvoice} onChange={handleChange} placeholder="Qty Factura" className="bg-gray-800 p-2 rounded" />
         <input type="number" name="qtyFisica" value={form.qtyFisica} onChange={handleChange} placeholder="Qty Física" className="bg-gray-800 p-2 rounded" />
 
-        <input name="costUnit" value={form.costUnit} onChange={handleChange} placeholder="Cost Unit" className="bg-gray-800 p-2 rounded" />
-        <input name="po" value={form.po} onChange={handleChange} placeholder="PO" className="bg-gray-800 p-2 rounded" />
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            $
+          </span>
+          <input
+            type="number"
+            name="costUnit"
+            value={form.costUnit}
+            onChange={handleChange}
+            step="0.01"
+            min="0"
+            className="w-full bg-gray-800 border border-gray-600 p-2 pl-8 rounded"
+            placeholder="0.00"
+          />
+        </div>        <input name="po" value={form.po} onChange={handleChange} placeholder="PO" className="bg-gray-800 p-2 rounded" />
 
         <input name="shipperNo" value={form.shipperNo} onChange={handleChange} placeholder="Shipper No" className="bg-gray-800 p-2 rounded" />
         <input name="supplier" value={form.supplier} onChange={handleChange} placeholder="Supplier" className="bg-gray-800 p-2 rounded" />
@@ -171,7 +184,7 @@ function NuevoRecibo() {
 
         <input name="comentarios" value={form.comentarios} onChange={handleChange} placeholder="Comentarios" className="bg-gray-800 p-2 rounded" />
 
-        <input value={diasDiferencia} readOnly className="bg-gray-700 p-2 rounded" />
+        <input value={diasDiferencia} readOnly placeholder="Dias diferencia" className="bg-gray-700 p-2 rounded" />
 
         {/* STATUS */}
         <select name="status" value={form.status} onChange={handleChange} className="bg-gray-800 p-2 rounded">
@@ -183,7 +196,7 @@ function NuevoRecibo() {
 
         {/* TIPO MATERIAL */}
         <select name="tipoMaterial" value={form.tipoMaterial} onChange={handleChange} className="bg-gray-800 p-2 rounded">
-          <option value="materia_prima">Materia Prima</option>
+          <option value="materia_prima">Materia Prima Temporal</option>
           <option value="materia_prima_definitiva">Materia Prima Definitiva</option>
         </select>
 
