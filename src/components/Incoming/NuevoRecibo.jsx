@@ -17,6 +17,7 @@ function NuevoRecibo() {
     qty: "",
     serialPlex: "",
     shipperNo: "",
+    recibe: "",
     diasDif: "",
     supplier: "",
     materialista: "",
@@ -199,7 +200,7 @@ function NuevoRecibo() {
           <option value="materia_prima">Materia Prima Temporal</option>
           <option value="materia_prima_definitiva">Materia Prima Definitiva</option>
         </select>
-
+        <input value={form.recibe} placeholder="Persona que recibe" onChange={handleChange} className="bg-gray-800 p-2 rounded" />
         <input value={form.materialista} readOnly className="bg-gray-700 p-2 rounded col-span-2" />
 
         {/* BOTONES */}

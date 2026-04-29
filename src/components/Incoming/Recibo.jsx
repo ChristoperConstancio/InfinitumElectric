@@ -16,7 +16,11 @@ function Recibo() {
         Month: '',
         partNo: '',
         pl: '',
-        po: ''
+        po: '',
+        status: '',
+        tipoMaterial: '',
+        serialPlex: '',
+        invoice: ''
     })
 
     const toggleCheckbox = (item) => {
@@ -34,7 +38,6 @@ function Recibo() {
         })
     }
 
-    // 🔥 FILTROS FRONT
     const applyFilters = (data) => {
         let result = [...data]
 
@@ -60,17 +63,53 @@ function Recibo() {
             )
         }
 
+        if (filters.status) {
+            result = result.filter(item =>
+                item.status?.toLowerCase() === filters.status.toLowerCase()
+            )
+        }
+
+        if (filters.tipoMaterial) {
+            result = result.filter(item =>
+                item.tipoMaterial?.toLowerCase() === filters.tipoMaterial.toLowerCase()
+            )
+        }
+
+        if (filters.serialPlex) {
+            result = result.filter(item =>
+                item.serialPlex?.toLowerCase().includes(filters.serialPlex.toLowerCase())
+            )
+        }
+
+        if (filters.invoice) {
+            result = result.filter(item =>
+                item.invoice?.toLowerCase().includes(filters.invoice.toLowerCase())
+            )
+        }
+
         return result
     }
 
     const handleSearch = async () => {
         setLoading(true)
-
         const data = await getRecibos(filters)
         const filtered = applyFilters(data)
-
         setFilteredData(filtered)
         setLoading(false)
+    }
+
+    const handleClearFilters = () => {
+        setFilters({
+            Month: '',
+            partNo: '',
+            pl: '',
+            po: '',
+            status: '',
+            tipoMaterial: '',
+            serialPlex: '',
+            invoice: ''
+        })
+        setFilteredData([])
     }
 
     useEffect(() => {
@@ -91,13 +130,13 @@ function Recibo() {
                 </div>
             </div>
 
-            {/* 🔹 Hint UX */}
+            {/* Hint UX */}
             <div className="px-12 text-gray-400 text-sm pt-2">
                 Doble click en un registro para editar
             </div>
 
-            {/* 🔹 Filtros */}
-            <div className="px-12 py-4 grid grid-cols-5 gap-4">
+            {/* Filtros — fila 1 */}
+            <div className="px-12 pt-4 grid grid-cols-5 gap-4">
                 <select
                     name="Month"
                     value={filters.Month}
@@ -146,16 +185,70 @@ function Recibo() {
                     className="bg-gray-800 border border-gray-600 p-2 rounded text-white"
                 />
 
+                <input
+                    type="text"
+                    name="serialPlex"
+                    placeholder="Serial Plex"
+                    value={filters.serialPlex}
+                    onChange={handleChange}
+                    className="bg-gray-800 border border-gray-600 p-2 rounded text-white"
+                />
+            </div>
+
+            {/* Filtros — fila 2 */}
+            <div className="px-12 py-4 grid grid-cols-5 gap-4">
+                <select
+                    name="status"
+                    value={filters.status}
+                    onChange={handleChange}
+                    className="bg-gray-800 border border-gray-600 p-2 rounded text-white"
+                >
+                    <option value="">Todos los status</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="aprobado">Aprobado</option>
+                    <option value="rechazado">Rechazado</option>
+                    <option value="completado">Completado</option>
+                </select>
+
+                <select
+                    name="tipoMaterial"
+                    value={filters.tipoMaterial}
+                    onChange={handleChange}
+                    className="bg-gray-800 border border-gray-600 p-2 rounded text-white"
+                >
+                    <option value="">Todos los tipos</option>
+                    <option value="materia_prima">Materia Prima</option>
+                    <option value="producto_terminado">Producto Terminado</option>
+                    <option value="consumible">Consumible</option>
+                    <option value="herramienta">Herramienta</option>
+                </select>
+
+                <input
+                    type="text"
+                    name="invoice"
+                    placeholder="Factura / Invoice"
+                    value={filters.invoice}
+                    onChange={handleChange}
+                    className="bg-gray-800 border border-gray-600 p-2 rounded text-white"
+                />
+
                 <button
                     onClick={handleSearch}
                     className="bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-2 font-semibold shadow-md"
                 >
                     Buscar
                 </button>
+
+                <button
+                    onClick={handleClearFilters}
+                    className="bg-gray-600 hover:bg-gray-500 rounded-lg px-4 py-2 font-semibold shadow-md"
+                >
+                    Limpiar
+                </button>
             </div>
 
-            {/* Botones */}
-            <div className="flex justify-end space-x-4 px-12 py-4">
+            {/* Botones acción */}
+            <div className="flex justify-end space-x-4 px-12 py-2">
                 {buttons && (
                     <>
                         <Link
@@ -170,8 +263,8 @@ function Recibo() {
                             disabled={!selectedRow}
                             onClick={() => navigate(`/EditarRecibo/${selectedRow}`)}
                             className={`rounded-lg px-4 py-2 flex items-center space-x-2 shadow-md 
-                                ${selectedRow 
-                                    ? 'bg-yellow-500 hover:bg-yellow-600' 
+                                ${selectedRow
+                                    ? 'bg-yellow-500 hover:bg-yellow-600'
                                     : 'bg-gray-600 cursor-not-allowed'}`}
                         >
                             <img src={view} alt="Editar" className="h-5 w-5" />
@@ -193,12 +286,14 @@ function Recibo() {
                 <table className="w-full table-fixed border-collapse">
                     <thead>
                         <tr className="bg-blue-500 text-black text-sm uppercase">
-                            <th className="p-3 text-left w-1/6">Fecha</th>
-                            <th className="p-3 text-left w-1/6">Part No</th>
-                            <th className="p-3 text-left w-1/6">PL</th>
-                            <th className="p-3 text-left w-1/6">PO</th>
+                            <th className="p-3 text-left w-1/12">Fecha</th>
+                            <th className="p-3 text-left w-1/12">Part No</th>
+                            <th className="p-3 text-left w-1/12">PL</th>
+                            <th className="p-3 text-left w-1/12">PO</th>
+                            <th className="p-3 text-left w-1/12">Serial Plex</th>
+                            <th className="p-3 text-left w-1/12">Factura</th>
+                            <th className="p-3 text-left w-1/12">Status</th>
                             <th className="p-3 text-center w-1/12">Qty</th>
-                            <th className="p-3 text-center w-1/12">Arribos</th>
                             <th className="p-3 text-center w-1/12">Inspección</th>
                         </tr>
                     </thead>
@@ -208,6 +303,20 @@ function Recibo() {
                             const arribos = item.arribos || 0
                             const inspeccion = arribos % 5 === 1
 
+                            const statusColors = {
+                                pendiente: 'text-yellow-400',
+                                aprobado: 'text-green-400',
+                                rechazado: 'text-red-400',
+                                completado: 'text-blue-400',
+                            }
+
+                            const tipoLabels = {
+                                materia_prima: 'Materia Prima',
+                                producto_terminado: 'Prod. Terminado',
+                                consumible: 'Consumible',
+                                herramienta: 'Herramienta',
+                            }
+
                             return (
                                 <tr
                                     key={item.id}
@@ -215,10 +324,10 @@ function Recibo() {
                                     onDoubleClick={() => handleDoubleClick(item)}
                                     className={`
                                         border-b border-gray-700
-                                        ${selectedRow === item.id 
-                                            ? 'bg-blue-800' 
-                                            : index % 2 === 0 
-                                                ? 'bg-gray-800' 
+                                        ${selectedRow === item.id
+                                            ? 'bg-blue-800'
+                                            : index % 2 === 0
+                                                ? 'bg-gray-800'
                                                 : 'bg-gray-900'}
                                         hover:bg-gray-700 cursor-pointer
                                     `}
@@ -227,10 +336,13 @@ function Recibo() {
                                     <td className="p-3 text-left truncate">{item.partNo}</td>
                                     <td className="p-3 text-left truncate">{item.packingList}</td>
                                     <td className="p-3 text-left truncate">{item.po}</td>
+                                    <td className="p-3 text-left truncate">{item.serialPlex}</td>
+                                    <td className="p-3 text-left truncate">{item.invoice}</td>
 
+                                    <td className={`p-3 text-left truncate font-semibold capitalize ${statusColors[item.status] ?? 'text-gray-300'}`}>
+                                        {item.status}
+                                    </td>
                                     <td className="p-3 text-center">{item.qty}</td>
-                                    <td className="p-3 text-center">{arribos}</td>
-
                                     <td className="p-3 text-center">
                                         {inspeccion ? (
                                             <span className="text-green-400 font-bold">●</span>
@@ -241,11 +353,19 @@ function Recibo() {
                                 </tr>
                             )
                         })}
+
+                        {!loading && filteredData.length === 0 && (
+                            <tr>
+                                <td colSpan={11} className="p-6 text-center text-gray-500">
+                                    No hay registros. Aplica filtros y presiona Buscar.
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
 
-            <div className="px-12 pb-6">
+            <div className="px-12 pb-6 text-gray-400 text-sm">
                 Total registros: {filteredData.length}
             </div>
 
