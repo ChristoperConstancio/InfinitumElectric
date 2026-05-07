@@ -193,6 +193,12 @@ function NuevoRecibo() {
           <option value="completado">Completado</option>
           <option value="capturado">Capturado</option>
           <option value="transferencia">Transferencia</option>
+          <option value="confirmadodiscrepancia">Confirmado Discrepancia</option>
+          <option value="confirmadopdtePO">Confirmado Pdte PO</option>
+          <option value="noconfirmado">No confirmado</option>
+
+
+
         </select>
 
         {/* TIPO MATERIAL */}
