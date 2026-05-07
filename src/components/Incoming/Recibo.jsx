@@ -205,9 +205,12 @@ function Recibo() {
                 >
                     <option value="">Todos los status</option>
                     <option value="pendiente">Pendiente</option>
-                    <option value="aprobado">Aprobado</option>
-                    <option value="rechazado">Rechazado</option>
                     <option value="completado">Completado</option>
+                    <option value="capturado">Capturado</option>
+                    <option value="transferencia">Transferencia</option>
+                    <option value="confirmadodiscrepancia">Confirmado Discrepancia</option>
+                    <option value="confirmadopdtePO">Confirmado Pdte PO</option>
+                    <option value="noconfirmado">No confirmado</option>
                 </select>
 
                 <select
