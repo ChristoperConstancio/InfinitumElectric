@@ -365,7 +365,6 @@ const getFechasMX = (dias) => {
 };
 const calcularFPY = (liberados, rechazados) => {
     const total = liberados + rechazados;
-    console.log(liberados)
     if (total === 0) return 100;
     return +(liberados / total * 100).toFixed(1);
 };

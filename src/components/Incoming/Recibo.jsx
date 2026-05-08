@@ -3,6 +3,8 @@ import add from '../../assets/add.png'
 import view from '../../assets/view.png'
 import { Link, useNavigate } from 'react-router-dom'
 import { getRecibos } from '../../customHooks/RFQ'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
 
 function Recibo() {
     const navigate = useNavigate()
@@ -22,13 +24,50 @@ function Recibo() {
         serialPlex: '',
         invoice: ''
     })
+    const handleExport = () => {
+        const exportOrder = [
+            { key: "numeroRecibo", label: "Número de recibo" },
+            { key: "invoice", label: "Numero factura" },
+            { key: "invoiceDate", label: "Fecha de factura" },
+            { key: "arrivalDate", label: "Fecha de llegada" },
+            { key: "idTrailer", label: "ID Trailer" },
+            { key: "packingList", label: "Packing List" },
+            { key: "partNo", label: "Part No" },
+            { key: "rev", label: "Rev" },
+            { key: "um", label: "U/M" },
+            { key: "qtyInvoice", label: "Qty Factura" },
+            { key: "qtyFisica", label: "Qty Física" },
+            { key: "costUnit", label: "Costo Unitario" },
+            { key: "po", label: "PO" },
+            { key: "shipperNo", label: "Shipper No" },
+            { key: "supplier", label: "Supplier" },
+            { key: "plexDate", label: "Fecha recibo PLEX" },
+            { key: "serialPlex", label: "Serial Plex" },
+            { key: "comentarios", label: "Comentarios" },
+            { key: "diasDif", label: "Dias diferencia" },
+            { key: "status", label: "Status" },
+            { key: "tipoMaterial", label: "Tipo Material" },
+            { key: "confirmacion", label: "Confirmación" },
+            { key: "recibe", label: "Persona que recibe" },
+            { key: "materialista", label: "Materialista" },
+        ]
 
+        const rows = filteredData.map(item =>
+            Object.fromEntries(exportOrder.map(({ key, label }) => [label, item[key] ?? ""]))
+        )
+
+        const ws = XLSX.utils.json_to_sheet(rows)
+        const wb = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(wb, ws, "Recibos")
+        const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" })
+        saveAs(new Blob([buf], { type: "application/octet-stream" }), `Recibos-${filters.Month || "Todos"}.xlsx`)
+    }
     const toggleCheckbox = (item) => {
         setSelectedRow(item.id)
     }
 
     const handleDoubleClick = (item) => {
-        navigate(`/EditarRecibo/${item.id}`)
+        navigate(`/AgregarRecibo/${item.id}`)
     }
 
     const handleChange = (e) => {
@@ -252,6 +291,16 @@ function Recibo() {
 
             {/* Botones acción */}
             <div className="flex justify-end space-x-4 px-12 py-2">
+                <button
+                    onClick={handleExport}
+                    disabled={filteredData.length === 0}
+                    className={`rounded-lg px-4 py-2 flex items-center space-x-2 shadow-md
+            ${filteredData.length > 0
+                            ? 'bg-emerald-600 hover:bg-emerald-700'
+                            : 'bg-gray-600 cursor-not-allowed'}`}
+                >
+                    <span className="text-sm font-semibold">⬇ Exportar Excel</span>
+                </button>
                 {buttons && (
                     <>
                         <Link
@@ -264,7 +313,7 @@ function Recibo() {
 
                         <button
                             disabled={!selectedRow}
-                            onClick={() => navigate(`/EditarRecibo/${selectedRow}`)}
+                            onClick={() => navigate(`/AgregarRecibo/${selectedRow}`)}
                             className={`rounded-lg px-4 py-2 flex items-center space-x-2 shadow-md 
                                 ${selectedRow
                                     ? 'bg-yellow-500 hover:bg-yellow-600'
@@ -274,6 +323,7 @@ function Recibo() {
                             <span className="text-sm font-semibold">Editar</span>
                         </button>
                     </>
+
                 )}
             </div>
 

@@ -8,30 +8,31 @@ function NuevoRecibo() {
   const isEdit = Boolean(id);
 
   const [form, setForm] = useState({
-    partNo: "",
-    rev: "",
-    um: "",
-    packingList: "",
-    po: "",
-    plexDate: "",
-    qty: "",
-    serialPlex: "",
-    shipperNo: "",
-    recibe: "",
-    diasDif: "",
-    supplier: "",
-    materialista: "",
     numeroRecibo: "",
-    idTrailer: "",
     invoice: "",
     invoiceDate: "",
     arrivalDate: "",
+    idTrailer: "",
+    packingList: "",
+    partNo: "",
+    rev: "",
+    um: "",
+    qtyInvoice: "",
+    qtyFisica: "",
     costUnit: "",
+    po: "",
+    shipperNo: "",
+    supplier: "",
+    plexDate: "",
+    serialPlex: "",
     comentarios: "",
+    diasDif: "",
     status: "pendiente",
     tipoMaterial: "materia_prima",
+    confirmacion: "",
+    recibe: "",
+    materialista: "",
   });
-
   // 🔥 Materialista (solo en creación)
   useEffect(() => {
     if (!isEdit) {
@@ -73,13 +74,13 @@ function NuevoRecibo() {
 
   const diasDiferencia = (() => {
     if (!form.arrivalDate || !form.plexDate) return "";
-    const diff = new Date(form.arrivalDate) - new Date(form.plexDate);
+    const diff = new Date(form.plexDate) - new Date(form.arrivalDate);
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
   })();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    console.log("es" + id)
     let response;
 
     if (isEdit) {
@@ -192,21 +193,21 @@ function NuevoRecibo() {
           <option value="pendiente">Pendiente</option>
           <option value="completado">Completado</option>
           <option value="capturado">Capturado</option>
-          <option value="transferencia">Transferencia</option>
-          <option value="confirmadodiscrepancia">Confirmado Discrepancia</option>
-          <option value="confirmadopdtePO">Confirmado Pdte PO</option>
-          <option value="noconfirmado">No confirmado</option>
-
-
-
         </select>
-
         {/* TIPO MATERIAL */}
         <select name="tipoMaterial" value={form.tipoMaterial} onChange={handleChange} className="bg-gray-800 p-2 rounded">
           <option value="materia_prima">Materia Prima Temporal</option>
           <option value="materia_prima_definitiva">Materia Prima Definitiva</option>
         </select>
-        <input value={form.recibe} placeholder="Persona que recibe" onChange={handleChange} className="bg-gray-800 p-2 rounded" />
+        {/* CONFIRMACION */}
+        <select name="confirmacion" value={form.confirmacion} onChange={handleChange} className="bg-gray-800 p-2 rounded">
+          <option value=""> Confirmación</option>
+          <option value="confirmado">Confirmado</option>
+          <option value="confirmadoDiscrepancia">Confirmado con Discrepancia</option>
+          <option value="confirmadoPendPO">Confirmado con Pend. de PO</option>
+          <option value="noConfirmado">No Confirmado</option>
+        </select>
+        <input value={form.recibe} name='recibe' placeholder="Persona que recibe" onChange={handleChange} className="bg-gray-800 p-2 rounded" />
         <input value={form.materialista} readOnly className="bg-gray-700 p-2 rounded col-span-2" />
 
         {/* BOTONES */}

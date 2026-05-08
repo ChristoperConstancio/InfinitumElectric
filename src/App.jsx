@@ -45,7 +45,7 @@ export default function App() {
     <Router>
       <Routes>
         {/* Ruta de login (pública) */}
-      <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
 
 
         {/* Rutas protegidas */}
@@ -80,8 +80,8 @@ export default function App() {
                       <Route path="/JOBS" element={<ListaJobs />} />
                       <Route path="/Mainboard" element={<FormMainBoard />} />
                       <Route path="/Recibo" element={<Recibo />} />
+                      <Route path="/AgregarRecibo/:id" element={<NuevoRecibo />} />
                       <Route path="/AgregarRecibo" element={<NuevoRecibo />} />
-
 
 
 
