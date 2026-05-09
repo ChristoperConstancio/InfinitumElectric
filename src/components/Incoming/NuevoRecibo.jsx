@@ -30,6 +30,8 @@ function NuevoRecibo() {
     status: "pendiente",
     tipoMaterial: "materia_prima",
     confirmacion: "",
+    statusRecibo: "",      // ✅
+    discrepancia: "",      // ✅
     recibe: "",
     materialista: "",
   });
@@ -73,8 +75,8 @@ function NuevoRecibo() {
   };
 
   const diasDiferencia = (() => {
-    if (!form.arrivalDate || !form.plexDate) return "";
-    const diff = new Date(form.plexDate) - new Date(form.arrivalDate);
+    if (!form.invoiceDate || !form.plexDate) return "";
+    const diff = new Date(form.plexDate) - new Date(form.invoiceDate);
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
   })();
 
@@ -119,103 +121,157 @@ function NuevoRecibo() {
 
       <form onSubmit={handleSubmit} className="px-12 py-6 grid grid-cols-2 gap-6">
 
-        <input name="numeroRecibo" value={form.numeroRecibo} onChange={handleChange} placeholder="Número de recibo" className="bg-gray-800 p-2 rounded" />
-        <input name="invoice" value={form.invoice} onChange={handleChange} placeholder="Numero factura" className="bg-gray-800 p-2 rounded" />
+        <div>
+          <label className="block text-sm mb-1">Número de recibo</label>
+          <input name="numeroRecibo" value={form.numeroRecibo} onChange={handleChange} placeholder="Número de recibo" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Numero factura</label>
+          <input name="invoice" value={form.invoice} onChange={handleChange} placeholder="Numero factura" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
 
         <div>
           <label className="block text-sm mb-1">Fecha de factura</label>
-          <input
-            type="date"
-            name="invoiceDate"
-            value={form.invoiceDate}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-          />
+          <input type="date" name="invoiceDate" value={form.invoiceDate} onChange={handleChange} className="w-full bg-gray-800 border border-gray-600 p-2 rounded" />
         </div>
         <div>
           <label className="block text-sm mb-1">Fecha de llegada</label>
-          <input
-            type="date"
-            name="arrivalDate"
-            value={form.arrivalDate}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-          />
+          <input type="date" name="arrivalDate" value={form.arrivalDate} onChange={handleChange} className="w-full bg-gray-800 border border-gray-600 p-2 rounded" />
         </div>
-        <input name="idTrailer" value={form.idTrailer} onChange={handleChange} placeholder="ID Trailer" className="bg-gray-800 p-2 rounded" />
-        <input name="packingList" value={form.packingList} onChange={handleChange} placeholder="Packing List" className="bg-gray-800 p-2 rounded" />
 
-        <input name="partNo" value={form.partNo} onChange={handleChange} placeholder="Part No" className="bg-gray-800 p-2 rounded" />
-        <input name="rev" value={form.rev} onChange={handleChange} placeholder="Rev" className="bg-gray-800 p-2 rounded" />
+        <div>
+          <label className="block text-sm mb-1">ID Trailer</label>
+          <input name="idTrailer" value={form.idTrailer} onChange={handleChange} placeholder="ID Trailer" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Packing List</label>
+          <input name="packingList" value={form.packingList} onChange={handleChange} placeholder="Packing List" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
 
-        <input name="um" value={form.um} onChange={handleChange} placeholder="U/M" className="bg-gray-800 p-2 rounded" />
+        <div>
+          <label className="block text-sm mb-1">Part No</label>
+          <input name="partNo" value={form.partNo} onChange={handleChange} placeholder="Part No" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Rev</label>
+          <input name="rev" value={form.rev} onChange={handleChange} placeholder="Rev" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
 
-        <input type="number" name="qtyInvoice" value={form.qtyInvoice} onChange={handleChange} placeholder="Qty Factura" className="bg-gray-800 p-2 rounded" />
-        <input type="number" name="qtyFisica" value={form.qtyFisica} onChange={handleChange} placeholder="Qty Física" className="bg-gray-800 p-2 rounded" />
+        <div>
+          <label className="block text-sm mb-1">U/M</label>
+          <input name="um" value={form.um} onChange={handleChange} placeholder="U/M" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Qty Factura</label>
+          <input type="number" name="qtyInvoice" value={form.qtyInvoice} onChange={handleChange} placeholder="Qty Factura" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
 
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-            $
-          </span>
-          <input
-            type="number"
-            name="costUnit"
-            value={form.costUnit}
-            onChange={handleChange}
-            step="0.01"
-            min="0"
-            className="w-full bg-gray-800 border border-gray-600 p-2 pl-8 rounded"
-            placeholder="0.00"
-          />
-        </div>        <input name="po" value={form.po} onChange={handleChange} placeholder="PO" className="bg-gray-800 p-2 rounded" />
+        <div>
+          <label className="block text-sm mb-1">Qty Física</label>
+          <input type="number" name="qtyFisica" value={form.qtyFisica} onChange={handleChange} placeholder="Qty Física" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Costo Unitario</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+            <input type="number" name="costUnit" value={form.costUnit} onChange={handleChange} step="0.01" min="0" className="w-full bg-gray-800 border border-gray-600 p-2 pl-8 rounded" placeholder="0.00" />
+          </div>
+        </div>
 
-        <input name="shipperNo" value={form.shipperNo} onChange={handleChange} placeholder="Shipper No" className="bg-gray-800 p-2 rounded" />
-        <input name="supplier" value={form.supplier} onChange={handleChange} placeholder="Supplier" className="bg-gray-800 p-2 rounded" />
+        <div>
+          <label className="block text-sm mb-1">PO</label>
+          <input name="po" value={form.po} onChange={handleChange} placeholder="PO" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Shipper No</label>
+          <input name="shipperNo" value={form.shipperNo} onChange={handleChange} placeholder="Shipper No" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
 
-        {/* Fecha recibo PLEX */}
+        <div>
+          <label className="block text-sm mb-1">Supplier</label>
+          <input name="supplier" value={form.supplier} onChange={handleChange} placeholder="Supplier" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
         <div>
           <label className="block text-sm mb-1">Fecha recibo PLEX</label>
-          <input
-            type="date"
-            name="plexDate"
-            value={form.plexDate}
-            onChange={handleChange}
-            className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-          />
-        </div>        <input name="serialPlex" value={form.serialPlex} onChange={handleChange} placeholder="Serial Plex" className="bg-gray-800 p-2 rounded" />
+          <input type="date" name="plexDate" value={form.plexDate} onChange={handleChange} className="w-full bg-gray-800 border border-gray-600 p-2 rounded" />
+        </div>
 
-        <input name="comentarios" value={form.comentarios} onChange={handleChange} placeholder="Comentarios" className="bg-gray-800 p-2 rounded" />
+        <div>
+          <label className="block text-sm mb-1">Serial Plex</label>
+          <input name="serialPlex" value={form.serialPlex} onChange={handleChange} placeholder="Serial Plex" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Comentarios</label>
+          <input name="comentarios" value={form.comentarios} onChange={handleChange} placeholder="Comentarios" className="w-full bg-gray-800 p-2 rounded" />
+        </div>
 
-        <input value={diasDiferencia} readOnly placeholder="Dias diferencia" className="bg-gray-700 p-2 rounded" />
+        <div>
+          <label className="block text-sm mb-1">Dias diferencia</label>
+          <input value={diasDiferencia} readOnly placeholder="Dias diferencia" className="w-full bg-gray-700 p-2 rounded" />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Status</label>
+          <select name="status" value={form.status} onChange={handleChange} className="w-full bg-gray-800 p-2 rounded">
+            <option value="pendiente">Pendiente</option>
+            <option value="completado">Completado</option>
+            <option value="capturado">Capturado</option>
+          </select>
+        </div>
 
-        {/* STATUS */}
-        <select name="status" value={form.status} onChange={handleChange} className="bg-gray-800 p-2 rounded">
-          <option value="pendiente">Pendiente</option>
-          <option value="completado">Completado</option>
-          <option value="capturado">Capturado</option>
-        </select>
-        {/* TIPO MATERIAL */}
-        <select name="tipoMaterial" value={form.tipoMaterial} onChange={handleChange} className="bg-gray-800 p-2 rounded">
-          <option value="materia_prima">Materia Prima Temporal</option>
-          <option value="materia_prima_definitiva">Materia Prima Definitiva</option>
-        </select>
-        {/* CONFIRMACION */}
-        <select name="confirmacion" value={form.confirmacion} onChange={handleChange} className="bg-gray-800 p-2 rounded">
-          <option value=""> Confirmación</option>
-          <option value="confirmado">Confirmado</option>
-          <option value="confirmadoDiscrepancia">Confirmado con Discrepancia</option>
-          <option value="confirmadoPendPO">Confirmado con Pend. de PO</option>
-          <option value="noConfirmado">No Confirmado</option>
-        </select>
-        <input value={form.recibe} name='recibe' placeholder="Persona que recibe" onChange={handleChange} className="bg-gray-800 p-2 rounded" />
-        <input value={form.materialista} readOnly className="bg-gray-700 p-2 rounded col-span-2" />
+        <div>
+          <label className="block text-sm mb-1">Tipo Material</label>
+          <select name="tipoMaterial" value={form.tipoMaterial} onChange={handleChange} className="w-full bg-gray-800 p-2 rounded">
+            <option value="materia_prima">Materia Prima Temporal</option>
+            <option value="materia_prima_definitiva">Materia Prima Definitiva</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Confirmación</label>
+          <select name="confirmacion" value={form.confirmacion} onChange={handleChange} className="w-full bg-gray-800 p-2 rounded">
+            <option value="">-- Confirmación --</option>
+            <option value="confirmado">Confirmado</option>
+            <option value="confirmadoDiscrepancia">Confirmado con Discrepancia</option>
+            <option value="confirmadoPendPO">Confirmado con Pend. de PO</option>
+            <option value="noConfirmado">No Confirmado</option>
+          </select>
+        </div>
+
+        {/* ✅ NUEVO - Status Recibo */}
+        <div>
+          <label className="block text-sm mb-1">Status Recibo</label>
+          <select name="statusRecibo" value={form.statusRecibo} onChange={handleChange} className="w-full bg-gray-800 p-2 rounded">
+            <option value="">-- Status Recibo --</option>
+            <option value="plex">Plex</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="pendiente">Pendiente</option>
+          </select>
+        </div>
+
+        {/* ✅ NUEVO - Discrepancia */}
+        <div>
+          <label className="block text-sm mb-1">Discrepancia</label>
+          <select name="discrepancia" value={form.discrepancia} onChange={handleChange} className="w-full bg-gray-800 p-2 rounded">
+            <option value="">-- Discrepancia --</option>
+            <option value="discrepancia">Discrepancia</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="sinAccionPendiente">Sin Acción Pendiente</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm mb-1">Persona que recibe</label>
+          <input value={form.recibe} name="recibe" placeholder="Persona que recibe" onChange={handleChange} className="w-full bg-gray-800 p-2 rounded" />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Materialista</label>
+          <input value={form.materialista} readOnly className="w-full bg-gray-700 p-2 rounded" />
+        </div>
 
         {/* BOTONES */}
         <div className="col-span-2 flex justify-end space-x-4">
           <button type="button" onClick={() => navigate("/recibo")} className="bg-gray-600 px-4 py-2 rounded">
             Cancelar
           </button>
-
           <button type="submit" className="bg-green-500 px-4 py-2 rounded">
             {isEdit ? "Actualizar" : "Guardar"}
           </button>
