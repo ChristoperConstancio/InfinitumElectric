@@ -236,16 +236,7 @@ function NuevoRecibo() {
           </select>
         </div>
 
-        {/* ✅ NUEVO - Status Recibo */}
-        <div>
-          <label className="block text-sm mb-1">Status Recibo</label>
-          <select name="statusRecibo" value={form.statusRecibo} onChange={handleChange} className="w-full bg-gray-800 p-2 rounded">
-            <option value="">-- Status Recibo --</option>
-            <option value="plex">Plex</option>
-            <option value="transferencia">Transferencia</option>
-            <option value="pendiente">Pendiente</option>
-          </select>
-        </div>
+
 
         {/* ✅ NUEVO - Discrepancia */}
         <div>
