@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   getFirestore,
   doc,
@@ -7,10 +7,8 @@ import {
 import live from "../../assets/live.gif";
 
 /* ================= CONFIG ================= */
-
 const lineas = ["L1", "L2", "L3", "LSA"];
 const META_HORA = 15;
-const INICIO_TURNO = 6; // 6 AM
 
 const calcularFPY = (liberados, rechazados) => {
   const total = liberados + rechazados;
@@ -30,168 +28,209 @@ const crearEstructuraFPY = (lineas) => {
     MT: {},
     ST: {},
     FI: {},
-    Total: {
-      Liberados: 0,
-      MT: 0,
-      ST: 0,
-      FI: 0,
-      Recuperados: 0 // 👈 NUEVO
-    }
+    Total: { Liberados: 0, MT: 0, ST: 0, FI: 0, Recuperados: 0 },
   };
-
-  lineas.forEach(l => {
+  lineas.forEach((l) => {
     resultado.Liberados[l] = 0;
     resultado.MT[l] = 0;
     resultado.ST[l] = 0;
     resultado.FI[l] = 0;
   });
-
   return resultado;
 };
 
-
+/* ================= COMPONENTE ================= */
 export default function TablaFPY() {
-
   const db = getFirestore();
   const [fecha, setFecha] = useState("");
   const [fechaISO, setFechaISO] = useState("");
   const [data, setData] = useState(crearEstructuraFPY(lineas));
+  const [compartiendo, setCompartiendo] = useState(false);
 
-  /* ================= INICIALIZAR FECHA ================= */
+  const reporteRef = useRef(null);
 
+  /* ── Inicializar fecha ── */
   useEffect(() => {
     const hoy = new Date();
-
     const year = hoy.getFullYear();
     const month = String(hoy.getMonth() + 1).padStart(2, "0");
     const day = String(hoy.getDate()).padStart(2, "0");
-
     setFechaISO(`${year}-${month}-${day}`);
     setFecha(`${hoy.getDate()}-${hoy.getMonth() + 1}-${year}`);
   }, []);
 
-  /* ================= CARGAR FPY ================= */
-  const fpyMT = calcularFPY(
-    data.Total.Liberados,
-    data.Total.MT
-  );
-
-  const fpyST = calcularFPY(
-    data.Total.Liberados,
-    data.Total.ST
-  );
-
-  const fpyFI = calcularFPY(
-    data.Total.Liberados,
-    data.Total.FI
-  );
+  /* ── Cargar FPY ── */
   useEffect(() => {
     if (!fecha) return;
-
     const cargarFPY = async () => {
       const ref = doc(db, "FPY", fecha);
       const snap = await getDoc(ref);
-
       const resultado = crearEstructuraFPY(lineas);
-
       if (snap.exists()) {
         const fpy = snap.data();
-        const recuperados = fpy['recuperado'] || 0; // ✅ ahora sí existe
-
-        lineas.forEach(l => {
+        const recuperados = fpy["recuperado"] || 0;
+        lineas.forEach((l) => {
           const liberados = fpy[`Liberados${l}`] || 0;
           const mt = fpy[`Rechazados${l}MT`] || 0;
           const st = fpy[`Rechazados${l}ST`] || 0;
           const fi = fpy[`Rechazados${l}FI`] || 0;
-
           resultado.Liberados[l] = liberados;
           resultado.MT[l] = mt;
           resultado.ST[l] = st;
           resultado.FI[l] = fi;
-
           resultado.Total.Liberados += liberados;
           resultado.Total.MT += mt;
           resultado.Total.ST += st;
           resultado.Total.FI += fi;
         });
-
         resultado.Total.Recuperados = recuperados;
       }
-
       setData(resultado);
     };
-
     cargarFPY();
     const interval = setInterval(cargarFPY, 5 * 60 * 1000);
     return () => clearInterval(interval);
-
   }, [fecha]);
-  /* ================= KPI ADHERENCIA ================= */
 
-  const META_TURNO = 142;
+  /* ── KPIs ── */
+  const fpyMT = calcularFPY(data.Total.Liberados, data.Total.MT);
+  const fpyST = calcularFPY(data.Total.Liberados, data.Total.ST);
+  const fpyFI = calcularFPY(data.Total.Liberados, data.Total.FI);
 
+  // ── Configuración de turno según día ──
+  // Sábado (día 6): meta 50 motores, turno 7:30 AM – 3:00 PM (7.5 hrs)
+  // Lunes–Viernes:  meta 142 motores, turno 7:30 AM – 5:00 PM (9.5 hrs)
   const ahora = new Date();
 
-  // Hora inicio turno 7:30 AM
-  const inicioTurno = new Date();
-  inicioTurno.setHours(7, 30, 0, 0);
+  // Usamos la fecha seleccionada para detectar el día de la semana
+  const fechaSeleccionada = fechaISO ? new Date(`${fechaISO}T12:00:00`) : ahora;
+  const esSabado = fechaSeleccionada.getDay() === 6;
 
-  // Hora fin turno 5:00 PM
-  const finTurno = new Date();
-  finTurno.setHours(17, 0, 0, 0);
+  const META_TURNO = esSabado ? 50 : 142;
+  const DURACION_TURNO = esSabado ? 7.5 : 9.5;  // horas
+  const HORA_FIN = esSabado ? 15 : 17;    // 3 PM o 5 PM
 
-  // Calcular horas trabajadas reales en decimal
+  const inicioTurno = new Date(); inicioTurno.setHours(7, 30, 0, 0);
+  const finTurno = new Date(); finTurno.setHours(HORA_FIN, 0, 0, 0);
+
   let horasTrabajadas = 0;
+  if (ahora <= inicioTurno) horasTrabajadas = 0;
+  else if (ahora >= finTurno) horasTrabajadas = DURACION_TURNO;
+  else horasTrabajadas = (ahora - inicioTurno) / (1000 * 60 * 60);
 
-  if (ahora <= inicioTurno) {
-    horasTrabajadas = 0;
-  } else if (ahora >= finTurno) {
-    horasTrabajadas = 9.5;
-  } else {
-    horasTrabajadas = (ahora - inicioTurno) / (1000 * 60 * 60);
-  }
-
-  // Meta por hora exacta
-  const metaPorHora = META_TURNO / 9.5;
-
-  // Meta acumulada hasta el momento
+  const metaPorHora = META_TURNO / DURACION_TURNO;
   const metaAcumulada = metaPorHora * horasTrabajadas;
-
-  // Motores por hora reales
-  const motoresPorHora =
-    horasTrabajadas === 0
-      ? 0
-      : (data.Total.Liberados / horasTrabajadas).toFixed(1);
-
-  // Cumplimiento %
-  const cumplimiento =
-    metaAcumulada === 0
-      ? 0
-      : ((data.Total.Liberados / metaAcumulada) * 100).toFixed(1);
-
+  const motoresPorHora = horasTrabajadas === 0 ? 0 : (data.Total.Liberados / horasTrabajadas).toFixed(1);
+  const cumplimiento = metaAcumulada === 0 ? 0 : ((data.Total.Liberados / metaAcumulada) * 100).toFixed(1);
   const enMeta = data.Total.Liberados >= metaAcumulada;
-  const analizados =
-    data.Total.MT + data.Total.ST + data.Total.FI;
+  const analizados = data.Total.MT + data.Total.ST + data.Total.FI;
+  const porcentajeRecuperacion = analizados === 0 ? 0 : ((data.Total.Recuperados / analizados) * 100).toFixed(1);
 
-  const porcentajeRecuperacion =
-    analizados === 0
-      ? 0
-      : ((data.Total.Recuperados / analizados) * 100).toFixed(1);
+  /* ── Compartir captura ── */
+  const handleCompartir = async () => {
+    const elemento = reporteRef.current;
+    if (!elemento) return;
+    setCompartiendo(true);
+
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+
+      // ── Técnica del clon en contenedor off-screen ──
+      // Usamos un wrapper con overflow:hidden y posición absoluta fuera
+      // del viewport. position:absolute (no fixed) permite que el navegador
+      // calcule correctamente el alto total del contenido.
+      const ANCHO = 900;
+
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "absolute";
+      wrapper.style.top = "0px";
+      wrapper.style.left = "-9999px";   // fuera del viewport, pero visible
+      wrapper.style.width = `${ANCHO}px`;
+      wrapper.style.overflow = "visible";
+      wrapper.style.pointerEvents = "none";
+      // NO usar visibility:hidden ni opacity:0 — html2canvas los pinta negro
+      document.body.appendChild(wrapper);
+
+      const clon = elemento.cloneNode(true);
+      clon.style.width = `${ANCHO}px`;
+      clon.style.maxWidth = "none";
+      clon.style.overflow = "visible";
+      wrapper.appendChild(clon);
+
+      // Esperamos 3 frames para que Tailwind y el grid calculen el layout
+      await new Promise((r) => setTimeout(r, 100));
+
+      // Medimos la altura real DESPUÉS del layout
+      const alturaReal = clon.getBoundingClientRect().height || clon.offsetHeight;
+
+      const canvas = await html2canvas(clon, {
+        backgroundColor: "#1f2937",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        width: ANCHO,
+        height: alturaReal,
+        windowWidth: ANCHO,
+        windowHeight: alturaReal,
+        scrollX: 0,
+        scrollY: 0,
+        x: 0,
+        y: 0,
+      });
+
+      document.body.removeChild(wrapper);
+
+      // Hora de cierre formateada
+      const horaActual = new Date().toLocaleTimeString("es-MX", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "America/Mexico_City",
+      });
+
+      const textoCompartir = `Se comparte reporte de producción con cierre a las ${horaActual}`;
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `reporte-produccion-${fecha}.png`, { type: "image/png" });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: "Reporte de Producción — FPY",
+            text: textoCompartir,
+            files: [file],
+          });
+        } else {
+          // Fallback: descarga directa
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `reporte-produccion-${fecha}.png`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      }, "image/png");
+
+    } catch (err) {
+      console.error("Error al compartir:", err);
+    } finally {
+      setCompartiendo(false);
+    }
+  };
+
+  /* ── Helpers de color ── */
+  const colorFPY = (v) => v >= 98 ? "text-green-400" : "text-red-500";
+  const colorMeta = (ok) => ok ? "text-green-400" : "text-red-500";
 
   /* ================= RENDER ================= */
-
   return (
-    <div className="p-6 bg-gray-800 min-h-screen space-y-8">
+    <div className="bg-gray-800 min-h-screen">
 
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-white text-3xl font-bold">
-          Producción – FPY
-        </h1>
-
+      {/* ── Selector de fecha FUERA de la captura ── */}
+      <div className="px-4 md:px-6 pt-4 md:pt-6">
         <input
           type="date"
-          className="bg-gray-700 text-white p-2 rounded"
+          className="bg-gray-700 text-white p-2 rounded text-sm"
           value={fechaISO}
           onChange={(e) => {
             const value = e.target.value;
@@ -200,197 +239,187 @@ export default function TablaFPY() {
             setFecha(`${Number(day)}-${Number(month)}-${year}`);
           }}
         />
-
-        <div className="flex items-center gap-3">
-          <h1 className="text-4xl font-bold rounded-md w-64 text-white bg-green-800 text-center">
-            {data.Total.Liberados} Motores
-          </h1>
-          <img src={live} alt="" className="w-20 pb-5" />
-        </div>
       </div>
 
-      {/* ================= KPI ================= */}
+      {/* ── Zona capturable ── */}
+      <div ref={reporteRef} className="p-4 md:p-6 space-y-6 bg-gray-800">
 
-      <div className="grid grid-cols-3 gap-6">
-
-        <div className="bg-gray-900 p-6 rounded-xl shadow-lg text-center">
-          <h2 className="text-gray-400 text-sm uppercase">Motores / Hora</h2>
-          <h1 className={`text-5xl font-bold ${enMeta ? "text-green-400" : "text-red-500"}`}>
-            {motoresPorHora}
-          </h1>
-          <p className="text-xs text-gray-400 mt-2">
-            Meta: {META_HORA}
-          </p>
-        </div>
-
-        <div className="bg-gray-900 p-6 rounded-xl shadow-lg text-center">
-          <h2 className="text-gray-400 text-sm uppercase">Adherencia</h2>
-          <h1 className={`text-5xl font-bold ${cumplimiento >= 100 ? "text-green-400" : "text-red-500"}`}>
-            {cumplimiento}%
-          </h1>
-          <p className="text-xs text-gray-400 mt-2">
-            Meta acumulada: {metaAcumulada}
-          </p>
-        </div>
-        <div className="bg-gray-900 p-6 rounded-xl shadow-lg text-center">
-          <h2 className="text-gray-400 text-sm uppercase">
-            Rechazos / Recuperados
-          </h2>
-
-          <h1 className="text-5xl font-bold text-white">
-            {analizados} / {data.Total.Recuperados}
+        {/* HEADER — elementos estáticos para html2canvas */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h1 className="text-white text-2xl md:text-3xl font-bold">
+            Producción – FPY
           </h1>
 
-          <p className={`text-lg mt-2 font-semibold ${porcentajeRecuperacion >= 80
-            ? "text-green-400"
-            : porcentajeRecuperacion >= 50
-              ? "text-yellow-400"
-              : "text-red-500"
-            }`}>
-            {porcentajeRecuperacion}%
-          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Fecha como texto plano */}
+            <span className="bg-gray-700 text-white px-3 py-2 rounded text-sm font-medium">
+              {fechaISO}
+            </span>
+            {/* Contador motores */}
+            <div className="bg-green-800 text-white text-xl md:text-3xl font-bold rounded-md px-4 py-2 flex items-center justify-center">
+              {data.Total.Liberados} Motores
+            </div>
+            {/* LIVE estático sin GIF */}
+            <div className="flex items-center gap-1.5 bg-green-950 border border-green-700 rounded-full px-2.5 py-1">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />
+              <span className="text-green-400 text-xs font-bold tracking-wide">LIVE</span>
+            </div>
+          </div>
         </div>
+
+        {/* KPI principal — 3 columnas en md, 1 columna en móvil */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          <div className="bg-gray-900 p-5 rounded-xl shadow-lg text-center">
+            <h2 className="text-gray-400 text-xs uppercase tracking-wide mb-1">Motores / Hora</h2>
+            <p className={`text-4xl md:text-5xl font-bold ${colorMeta(enMeta)}`}>{motoresPorHora}</p>
+            <p className="text-xs text-gray-400 mt-2">Meta: {META_HORA}</p>
+            {esSabado && (
+              <p className="text-[10px] text-amber-400 mt-1 font-medium">Sábado · Corte 3:00 PM</p>
+            )}
+          </div>
+
+          <div className="bg-gray-900 p-5 rounded-xl shadow-lg text-center">
+            <h2 className="text-gray-400 text-xs uppercase tracking-wide mb-1">Adherencia</h2>
+            <p className={`text-4xl md:text-5xl font-bold ${colorMeta(cumplimiento >= 100)}`}>{cumplimiento}%</p>
+            <p className="text-xs text-gray-400 mt-2">
+              Meta: {META_TURNO} · Acum: {metaAcumulada.toFixed(0)}
+            </p>
+            {esSabado && (
+              <p className="text-[10px] text-amber-400 mt-1 font-medium">Turno sábado 7:30 – 15:00</p>
+            )}
+          </div>
+
+          <div className="bg-gray-900 p-5 rounded-xl shadow-lg text-center">
+            <h2 className="text-gray-400 text-xs uppercase tracking-wide mb-1">Rechazos / Recuperados</h2>
+            <p className="text-4xl md:text-5xl font-bold text-white">
+              {analizados} / {data.Total.Recuperados}
+            </p>
+            <p className={`text-base mt-2 font-semibold ${porcentajeRecuperacion >= 80 ? "text-green-400"
+                : porcentajeRecuperacion >= 50 ? "text-yellow-400"
+                  : "text-red-500"
+              }`}>{porcentajeRecuperacion}%</p>
+          </div>
+
+        </div>
+
+        {/* Barra progreso */}
+        <div className="bg-gray-900 p-4 rounded-xl">
+          <div className="flex justify-between text-xs text-gray-400 mb-1">
+            <span>Adherencia</span>
+            <span>{cumplimiento}%</span>
+          </div>
+          <div className="w-full bg-gray-700 h-5 rounded-full overflow-hidden">
+            <div
+              className={`h-5 rounded-full transition-all duration-500 ${cumplimiento >= 100 ? "bg-green-500" : "bg-red-500"}`}
+              style={{ width: `${Math.min(cumplimiento, 100)}%` }}
+            />
+          </div>
+        </div>
+
+        {/* KPI FPY — 3 columnas */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          {[
+            { label: "Motor Test FPY", fpy: fpyMT, rechazos: data.Total.MT },
+            { label: "System Test FPY", fpy: fpyST, rechazos: data.Total.ST },
+            { label: "Final Inspection FPY", fpy: fpyFI, rechazos: data.Total.FI },
+          ].map(({ label, fpy, rechazos }) => (
+            <div key={label} className="bg-gray-900 p-5 rounded-xl shadow-lg text-center">
+              <h2 className="text-gray-400 text-xs uppercase tracking-wide mb-1">{label}</h2>
+              <p className={`text-4xl md:text-5xl font-bold ${colorFPY(fpy)}`}>{fpy}%</p>
+              <p className="text-xs text-gray-400 mt-2">Rechazos: {rechazos}</p>
+            </div>
+          ))}
+
+        </div>
+
+        {/* TABLA */}
+        <div className="overflow-x-auto rounded-xl">
+          <table className="min-w-full bg-gray-800 rounded-xl shadow-md text-sm">
+            <thead>
+              <tr className="text-white uppercase text-xs bg-gray-900">
+                <th className="px-3 py-3 text-left">Línea</th>
+                <th className="px-3 py-3 text-center">MT %</th>
+                <th className="px-3 py-3 text-center">ST %</th>
+                <th className="px-3 py-3 text-center">FI %</th>
+                <th className="px-3 py-3 text-center">Liberados</th>
+              </tr>
+            </thead>
+            <tbody className="text-white">
+              {lineas.map((l) => {
+                const fpyMTL = calcularFPY(data.Liberados[l], data.MT[l]);
+                const fpySTL = calcularFPY(data.Liberados[l], data.ST[l]);
+                const fpyFIL = calcularFPY(data.Liberados[l], data.FI[l]);
+                return (
+                  <tr key={l} className="border-t border-gray-700">
+                    <td className="px-3 py-3 font-semibold bg-gray-900">{l}</td>
+                    <td className={`px-3 py-3 text-center font-bold ${colorFPY(fpyMTL)}`}>
+                      {fpyMTL}% <span className="text-gray-500 font-normal">({data.MT[l]})</span>
+                    </td>
+                    <td className={`px-3 py-3 text-center font-bold ${colorFPY(fpySTL)}`}>
+                      {fpySTL}% <span className="text-gray-500 font-normal">({data.ST[l]})</span>
+                    </td>
+                    <td className={`px-3 py-3 text-center font-bold ${colorFPY(fpyFIL)}`}>
+                      {fpyFIL}% <span className="text-gray-500 font-normal">({data.FI[l]})</span>
+                    </td>
+                    <td className="px-3 py-3 text-center font-bold text-blue-400">
+                      {data.Liberados[l]}
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {/* Fila GLOBAL */}
+              <tr className="bg-gray-900 border-t border-white font-bold">
+                <td className="px-3 py-3">GLOBAL</td>
+                <td className={`px-3 py-3 text-center ${colorFPY(fpyMT)}`}>{fpyMT}%</td>
+                <td className={`px-3 py-3 text-center ${colorFPY(fpyST)}`}>{fpyST}%</td>
+                <td className={`px-3 py-3 text-center ${colorFPY(fpyFI)}`}>{fpyFI}%</td>
+                <td className="px-3 py-3 text-center text-blue-400">{data.Total.Liberados}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p className="text-xs text-gray-400">Fecha: {fecha}</p>
 
       </div>
+      {/* Fin zona capturable */}
 
-      {/* Barra progreso */}
-      <div className="bg-gray-900 p-4 rounded-xl">
-        <div className="w-full bg-gray-700 h-6 rounded-full overflow-hidden">
-          <div
-            className={`h-6 ${cumplimiento >= 100 ? "bg-green-500" : "bg-red-500"}`}
-            style={{ width: `${Math.min(cumplimiento, 100)}%` }}
-          />
-        </div>
+      {/* ── Botón compartir (fuera de la captura) ── */}
+      <div className="px-4 pb-8 pt-2">
+        <button
+          onClick={handleCompartir}
+          disabled={compartiendo}
+          className="
+            w-full flex items-center justify-center gap-2
+            bg-gray-700 hover:bg-gray-600 active:bg-gray-900
+            border border-gray-500 hover:border-gray-400
+            text-white font-semibold py-4 rounded-xl
+            transition-all text-sm
+            disabled:opacity-50 disabled:cursor-not-allowed
+          "
+        >
+          {compartiendo ? (
+            <>
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+              </svg>
+              Generando imagen…
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              Compartir reporte
+            </>
+          )}
+        </button>
       </div>
-      {/* ================= KPI FPY ================= */}
-
-      <div className="grid grid-cols-3 gap-6">
-
-        {/* MOTOR TEST */}
-        <div className="bg-gray-900 p-6 rounded-xl shadow-lg text-center">
-          <h2 className="text-gray-400 text-sm uppercase">
-            Motor Test FPY
-          </h2>
-
-          <h1 className={`text-5xl font-bold ${fpyMT >= 98 ? "text-green-400" : "text-red-500"
-            }`}>
-            {fpyMT}%
-          </h1>
-
-          <p className="text-xs text-gray-400 mt-2">
-            Rechazos: {data.Total.MT}
-          </p>
-        </div>
-
-        {/* SYSTEM TEST */}
-        <div className="bg-gray-900 p-6 rounded-xl shadow-lg text-center">
-          <h2 className="text-gray-400 text-sm uppercase">
-            System Test FPY
-          </h2>
-
-          <h1 className={`text-5xl font-bold ${fpyST >= 98 ? "text-green-400" : "text-red-500"
-            }`}>
-            {fpyST}%
-          </h1>
-
-          <p className="text-xs text-gray-400 mt-2">
-            Rechazos: {data.Total.ST}
-          </p>
-        </div>
-
-        {/* FINAL INSPECTION */}
-        <div className="bg-gray-900 p-6 rounded-xl shadow-lg text-center">
-          <h2 className="text-gray-400 text-sm uppercase">
-            Final Inspection FPY
-          </h2>
-
-          <h1 className={`text-5xl font-bold ${fpyFI >= 98 ? "text-green-400" : "text-red-500"
-            }`}>
-            {fpyFI}%
-          </h1>
-
-          <p className="text-xs text-gray-400 mt-2">
-            Rechazos: {data.Total.FI}
-          </p>
-        </div>
-
-      </div>
-
-      {/* ================= TABLA ================= */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-gray-800 rounded-lg shadow-md">
-          <thead>
-            <tr className="text-white uppercase text-sm bg-gray-900">
-              <th className="px-4 py-3 text-left">Línea</th>
-              <th className="px-4 py-3 text-center">FPY MT %</th>
-              <th className="px-4 py-3 text-center">FPY ST %</th>
-              <th className="px-4 py-3 text-center">FPY FI %</th>
-              <th className="px-4 py-3 text-center">Liberados</th>
-            </tr>
-          </thead>
-
-          <tbody className="text-sm text-white">
-
-            {lineas.map(l => {
-              const fpyMTLinea = calcularFPY(data.Liberados[l], data.MT[l]);
-              const fpySTLinea = calcularFPY(data.Liberados[l], data.ST[l]);
-              const fpyFILinea = calcularFPY(data.Liberados[l], data.FI[l]);
-              const fpyTotalLinea = calcularFPYLinea(
-                data.Liberados[l],
-                data.MT[l],
-                data.ST[l],
-                data.FI[l]
-              );
-
-              return (
-                <tr key={l} className="border-t border-gray-700">
-                  <td className="px-4 py-3 font-semibold bg-gray-900">{l}</td>
-
-                  <td className={`px-4 py-3 text-center font-bold ${fpyMTLinea >= 98 ? "text-green-400" : "text-red-500"}`}>
-                    {fpyMTLinea}% ({data.MT[l]})
-                  </td>
-
-                  <td className={`px-4 py-3 text-center font-bold ${fpySTLinea >= 98 ? "text-green-400" : "text-red-500"}`}>
-                    {fpySTLinea}% ({data.ST[l]})
-                  </td>
-
-                  <td className={`px-4 py-3 text-center font-bold ${fpyFILinea >= 98 ? "text-green-400" : "text-red-500"}`}>
-                    {fpyFILinea}% ({data.FI[l]})
-                  </td>
-
-                  <td className="px-4 py-3 text-center font-bold text-blue-400">
-                    {data.Liberados[l]}
-                  </td>
-                </tr>
-              );
-            })}
-
-            {/* FILA GLOBAL */}
-            <tr className="bg-gray-900 border-t border-white font-bold">
-              <td className="px-4 py-3">GLOBAL</td>
-
-              <td className={`px-4 py-3 text-center ${fpyMT >= 98 ? "text-green-400" : "text-red-500"}`}>
-                {fpyMT}%
-              </td>
-
-              <td className={`px-4 py-3 text-center ${fpyST >= 98 ? "text-green-400" : "text-red-500"}`}>
-                {fpyST}%
-              </td>
-
-              <td className={`px-4 py-3 text-center ${fpyFI >= 98 ? "text-green-400" : "text-red-500"}`}>
-                {fpyFI}%
-              </td>
-
-
-            </tr>
-
-          </tbody>
-        </table>
-      </div>
-
-      <p className="text-xs text-white">
-        Fecha actual: {fecha}
-      </p>
 
     </div>
   );

@@ -27,6 +27,7 @@ import ListaJobs from "./components/JOBS/JOBS.jsx";
 import FormMainBoard from "./components/RFQs/Mainboard.jsx";
 import Recibo from "./components/Incoming/Recibo.jsx";
 import NuevoRecibo from "./components/Incoming/NuevoRecibo.jsx";
+import MRB from "./components/MRB.jsx";
 
 function ProtectedRoute({ isAuthenticated, children }) {
   if (!isAuthenticated) {
@@ -82,6 +83,7 @@ export default function App() {
                       <Route path="/Recibo" element={<Recibo />} />
                       <Route path="/AgregarRecibo/:id" element={<NuevoRecibo />} />
                       <Route path="/AgregarRecibo" element={<NuevoRecibo />} />
+                      <Route path="/MRB" element={<MRB />} />
 
 
 

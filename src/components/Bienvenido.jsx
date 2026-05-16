@@ -20,6 +20,7 @@ function Bienvenido() {
           setApartments([
             "Usuarios",
             "Fallas",
+            "MRB",
             "Desensamble",
             "Analisis",
             "Final",
