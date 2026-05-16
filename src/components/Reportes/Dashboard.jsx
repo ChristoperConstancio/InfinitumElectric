@@ -107,7 +107,7 @@ export default function TablaFPY() {
   const esSabado = fechaSeleccionada.getDay() === 6;
 
 const META_HORA = esSabado ?  7 : 19;
-  const META_TURNO      = esSabado ? 50  : 180;
+  const META_TURNO      = esSabado ? 55  : 180;
   const DURACION_TURNO  = esSabado ? 7.5 : 9.5;  // horas
   const HORA_FIN        = esSabado ? 15  : 17;    // 3 PM o 5 PM
 
