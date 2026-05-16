@@ -8,7 +8,6 @@ import live from "../../assets/live.gif";
 
 /* ================= CONFIG ================= */
 const lineas = ["L1", "L2", "L3", "LSA"];
-const META_HORA = 15;
 
 const calcularFPY = (liberados, rechazados) => {
   const total = liberados + rechazados;
@@ -46,6 +45,7 @@ export default function TablaFPY() {
   const [fechaISO, setFechaISO] = useState("");
   const [data, setData]         = useState(crearEstructuraFPY(lineas));
   const [compartiendo, setCompartiendo] = useState(false);
+  const [horaCorte, setHoraCorte]       = useState("");
 
   const reporteRef = useRef(null);
 
@@ -106,7 +106,8 @@ export default function TablaFPY() {
   const fechaSeleccionada = fechaISO ? new Date(`${fechaISO}T12:00:00`) : ahora;
   const esSabado = fechaSeleccionada.getDay() === 6;
 
-  const META_TURNO      = esSabado ? 50  : 142;
+const META_HORA = esSabado ?  7 : 19;
+  const META_TURNO      = esSabado ? 50  : 180;
   const DURACION_TURNO  = esSabado ? 7.5 : 9.5;  // horas
   const HORA_FIN        = esSabado ? 15  : 17;    // 3 PM o 5 PM
 
@@ -135,33 +136,55 @@ export default function TablaFPY() {
     try {
       const html2canvas = (await import("html2canvas")).default;
 
-      // ── Técnica del clon en contenedor off-screen ──
-      // Usamos un wrapper con overflow:hidden y posición absoluta fuera
-      // del viewport. position:absolute (no fixed) permite que el navegador
-      // calcule correctamente el alto total del contenido.
+      // ── Clon con layout forzado a desktop ──
+      // Tailwind calcula breakpoints según el viewport del navegador, no el
+      // ancho del elemento. En móvil el viewport es ~390px aunque el clon
+      // tenga 900px, por eso los grids siguen en 1 columna.
+      // Solución: inyectamos un <style> que fuerza el layout desktop
+      // directamente en el clon, sin depender de breakpoints.
       const ANCHO = 900;
 
       const wrapper = document.createElement("div");
       wrapper.style.position      = "absolute";
       wrapper.style.top           = "0px";
-      wrapper.style.left          = "-9999px";   // fuera del viewport, pero visible
+      wrapper.style.left          = "-9999px";
       wrapper.style.width         = `${ANCHO}px`;
       wrapper.style.overflow      = "visible";
       wrapper.style.pointerEvents = "none";
-      // NO usar visibility:hidden ni opacity:0 — html2canvas los pinta negro
       document.body.appendChild(wrapper);
 
       const clon = elemento.cloneNode(true);
       clon.style.width    = `${ANCHO}px`;
       clon.style.maxWidth = "none";
       clon.style.overflow = "visible";
+
+      // Inyectamos estilos que fuerzan el layout de desktop
+      // sin importar el viewport real del dispositivo
+      const estiloDesktop = document.createElement("style");
+      estiloDesktop.textContent = `
+        /* Forzar grid de 3 columnas (equivale a sm:grid-cols-3) */
+        [data-capture] .grid { display: grid !important; }
+        [data-capture] .grid-cols-1 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+        /* Forzar textos tamaño desktop (md:text-3xl, md:text-5xl) */
+        [data-capture] .text-2xl  { font-size: 1.5rem   !important; line-height: 2rem !important; }
+        [data-capture] .text-4xl  { font-size: 2.25rem  !important; line-height: 2.5rem !important; }
+        [data-capture] .md\\:text-3xl { font-size: 1.875rem !important; line-height: 2.25rem !important; }
+        [data-capture] .md\\:text-5xl { font-size: 3rem     !important; line-height: 1 !important; }
+        /* Header en fila */
+        [data-capture] .flex-col  { flex-direction: row !important; }
+        [data-capture] .flex-wrap { flex-wrap: nowrap   !important; }
+        /* Tabla sin scroll forzado */
+        [data-capture] .overflow-x-auto { overflow: visible !important; }
+      `;
+      clon.setAttribute("data-capture", "true");
+      clon.appendChild(estiloDesktop);
+
       wrapper.appendChild(clon);
 
-      // Esperamos 3 frames para que Tailwind y el grid calculen el layout
-      await new Promise((r) => setTimeout(r, 100));
+      // Esperamos que el navegador recalcule el layout con los nuevos estilos
+      await new Promise((r) => setTimeout(r, 200));
 
-      // Medimos la altura real DESPUÉS del layout
-      const alturaReal = clon.getBoundingClientRect().height || clon.offsetHeight;
+      const alturaReal = clon.scrollHeight || clon.offsetHeight;
 
       const canvas = await html2canvas(clon, {
         backgroundColor: "#1f2937",
@@ -187,6 +210,7 @@ export default function TablaFPY() {
         hour12: true,
         timeZone: "America/Mexico_City",
       });
+      setHoraCorte(horaActual);
 
       const textoCompartir = `Se comparte reporte de producción con cierre a las ${horaActual}`;
 
@@ -272,9 +296,16 @@ export default function TablaFPY() {
 
           <div className="flex items-center gap-3 flex-wrap">
             {/* Fecha como texto plano */}
-            <span className="bg-gray-700 text-white px-3 py-2 rounded text-sm font-medium">
-              {fechaISO}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="bg-gray-700 text-white px-3 py-2 rounded text-sm font-medium">
+                {fechaISO}
+              </span>
+              {horaCorte && (
+                <span className="bg-gray-700 text-amber-400 px-3 py-2 rounded text-sm font-semibold whitespace-nowrap">
+                  Corte: {horaCorte}
+                </span>
+              )}
+            </div>
             {/* Contador motores */}
             <div className="bg-green-800 text-white text-xl md:text-3xl font-bold rounded-md px-4 py-2 text-center">
               {data.Total.Liberados} Motores
