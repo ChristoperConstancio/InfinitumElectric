@@ -188,7 +188,7 @@ export default function TablaFPY() {
         timeZone: "America/Mexico_City",
       });
 
-      const textoCompartir = `Se comparte reporte de producción con cierre a las ${horaActual}`;
+      const textoCompartir = `Se comparte reporte de producción de {data.Total.Liberados} motores con cierre a las ${horaActual} `;
 
       canvas.toBlob(async (blob) => {
         if (!blob) return;
