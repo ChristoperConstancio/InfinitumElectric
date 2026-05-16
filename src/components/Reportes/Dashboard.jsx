@@ -225,7 +225,38 @@ export default function TablaFPY() {
   /* ================= RENDER ================= */
   return (
     <div className="bg-gray-800 min-h-screen">
-
+      <div className="px-4 pb-8 pt-2">
+        <button
+          onClick={handleCompartir}
+          disabled={compartiendo}
+          className="
+            w-full flex items-center justify-center gap-2
+            bg-gray-700 hover:bg-gray-600 active:bg-gray-900
+            border border-gray-500 hover:border-gray-400
+            text-white font-semibold py-4 rounded-xl
+            transition-all text-sm
+            disabled:opacity-50 disabled:cursor-not-allowed
+          "
+        >
+          {compartiendo ? (
+            <>
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+              </svg>
+              Generando imagen…
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              Compartir reporte
+            </>
+          )}
+        </button>
+      </div>
       {/* ── Selector de fecha FUERA de la captura ── */}
       <div className="px-4 md:px-6 pt-4 md:pt-6">
         <input
@@ -388,38 +419,7 @@ export default function TablaFPY() {
       {/* Fin zona capturable */}
 
       {/* ── Botón compartir (fuera de la captura) ── */}
-      <div className="px-4 pb-8 pt-2">
-        <button
-          onClick={handleCompartir}
-          disabled={compartiendo}
-          className="
-            w-full flex items-center justify-center gap-2
-            bg-gray-700 hover:bg-gray-600 active:bg-gray-900
-            border border-gray-500 hover:border-gray-400
-            text-white font-semibold py-4 rounded-xl
-            transition-all text-sm
-            disabled:opacity-50 disabled:cursor-not-allowed
-          "
-        >
-          {compartiendo ? (
-            <>
-              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-              </svg>
-              Generando imagen…
-            </>
-          ) : (
-            <>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-              Compartir reporte
-            </>
-          )}
-        </button>
-      </div>
+
 
     </div>
   );
