@@ -42,9 +42,9 @@ const crearEstructuraFPY = (lineas) => {
 /* ================= COMPONENTE ================= */
 export default function TablaFPY() {
   const db = getFirestore();
-  const [fecha, setFecha] = useState("");
+  const [fecha, setFecha]       = useState("");
   const [fechaISO, setFechaISO] = useState("");
-  const [data, setData] = useState(crearEstructuraFPY(lineas));
+  const [data, setData]         = useState(crearEstructuraFPY(lineas));
   const [compartiendo, setCompartiendo] = useState(false);
 
   const reporteRef = useRef(null);
@@ -52,9 +52,9 @@ export default function TablaFPY() {
   /* ── Inicializar fecha ── */
   useEffect(() => {
     const hoy = new Date();
-    const year = hoy.getFullYear();
+    const year  = hoy.getFullYear();
     const month = String(hoy.getMonth() + 1).padStart(2, "0");
-    const day = String(hoy.getDate()).padStart(2, "0");
+    const day   = String(hoy.getDate()).padStart(2, "0");
     setFechaISO(`${year}-${month}-${day}`);
     setFecha(`${hoy.getDate()}-${hoy.getMonth() + 1}-${year}`);
   }, []);
@@ -63,7 +63,7 @@ export default function TablaFPY() {
   useEffect(() => {
     if (!fecha) return;
     const cargarFPY = async () => {
-      const ref = doc(db, "FPY", fecha);
+      const ref  = doc(db, "FPY", fecha);
       const snap = await getDoc(ref);
       const resultado = crearEstructuraFPY(lineas);
       if (snap.exists()) {
@@ -106,24 +106,24 @@ export default function TablaFPY() {
   const fechaSeleccionada = fechaISO ? new Date(`${fechaISO}T12:00:00`) : ahora;
   const esSabado = fechaSeleccionada.getDay() === 6;
 
-  const META_TURNO = esSabado ? 50 : 142;
-  const DURACION_TURNO = esSabado ? 7.5 : 9.5;  // horas
-  const HORA_FIN = esSabado ? 15 : 17;    // 3 PM o 5 PM
+  const META_TURNO      = esSabado ? 50  : 142;
+  const DURACION_TURNO  = esSabado ? 7.5 : 9.5;  // horas
+  const HORA_FIN        = esSabado ? 15  : 17;    // 3 PM o 5 PM
 
   const inicioTurno = new Date(); inicioTurno.setHours(7, 30, 0, 0);
-  const finTurno = new Date(); finTurno.setHours(HORA_FIN, 0, 0, 0);
+  const finTurno    = new Date(); finTurno.setHours(HORA_FIN, 0, 0, 0);
 
   let horasTrabajadas = 0;
-  if (ahora <= inicioTurno) horasTrabajadas = 0;
-  else if (ahora >= finTurno) horasTrabajadas = DURACION_TURNO;
+  if (ahora <= inicioTurno)       horasTrabajadas = 0;
+  else if (ahora >= finTurno)     horasTrabajadas = DURACION_TURNO;
   else horasTrabajadas = (ahora - inicioTurno) / (1000 * 60 * 60);
 
-  const metaPorHora = META_TURNO / DURACION_TURNO;
-  const metaAcumulada = metaPorHora * horasTrabajadas;
+  const metaPorHora    = META_TURNO / DURACION_TURNO;
+  const metaAcumulada  = metaPorHora * horasTrabajadas;
   const motoresPorHora = horasTrabajadas === 0 ? 0 : (data.Total.Liberados / horasTrabajadas).toFixed(1);
-  const cumplimiento = metaAcumulada === 0 ? 0 : ((data.Total.Liberados / metaAcumulada) * 100).toFixed(1);
-  const enMeta = data.Total.Liberados >= metaAcumulada;
-  const analizados = data.Total.MT + data.Total.ST + data.Total.FI;
+  const cumplimiento   = metaAcumulada === 0 ? 0 : ((data.Total.Liberados / metaAcumulada) * 100).toFixed(1);
+  const enMeta         = data.Total.Liberados >= metaAcumulada;
+  const analizados     = data.Total.MT + data.Total.ST + data.Total.FI;
   const porcentajeRecuperacion = analizados === 0 ? 0 : ((data.Total.Recuperados / analizados) * 100).toFixed(1);
 
   /* ── Compartir captura ── */
@@ -142,17 +142,17 @@ export default function TablaFPY() {
       const ANCHO = 900;
 
       const wrapper = document.createElement("div");
-      wrapper.style.position = "absolute";
-      wrapper.style.top = "0px";
-      wrapper.style.left = "-9999px";   // fuera del viewport, pero visible
-      wrapper.style.width = `${ANCHO}px`;
-      wrapper.style.overflow = "visible";
+      wrapper.style.position      = "absolute";
+      wrapper.style.top           = "0px";
+      wrapper.style.left          = "-9999px";   // fuera del viewport, pero visible
+      wrapper.style.width         = `${ANCHO}px`;
+      wrapper.style.overflow      = "visible";
       wrapper.style.pointerEvents = "none";
       // NO usar visibility:hidden ni opacity:0 — html2canvas los pinta negro
       document.body.appendChild(wrapper);
 
       const clon = elemento.cloneNode(true);
-      clon.style.width = `${ANCHO}px`;
+      clon.style.width    = `${ANCHO}px`;
       clon.style.maxWidth = "none";
       clon.style.overflow = "visible";
       wrapper.appendChild(clon);
@@ -168,14 +168,14 @@ export default function TablaFPY() {
         scale: 2,
         useCORS: true,
         logging: false,
-        width: ANCHO,
-        height: alturaReal,
-        windowWidth: ANCHO,
+        width:        ANCHO,
+        height:       alturaReal,
+        windowWidth:  ANCHO,
         windowHeight: alturaReal,
-        scrollX: 0,
-        scrollY: 0,
-        x: 0,
-        y: 0,
+        scrollX:      0,
+        scrollY:      0,
+        x:            0,
+        y:            0,
       });
 
       document.body.removeChild(wrapper);
@@ -188,75 +188,64 @@ export default function TablaFPY() {
         timeZone: "America/Mexico_City",
       });
 
-      const textoCompartir = `Se comparte reporte de producción de {data.Total.Liberados} motores con cierre a las ${horaActual} `;
+      const textoCompartir = `Se comparte reporte de producción con cierre a las ${horaActual}`;
 
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        const file = new File([blob], `reporte-produccion-${fecha}.png`, { type: "image/png" });
+      // Convertimos toBlob a Promise para poder usar await y que el
+      // finally espere a que todo termine antes de quitar el spinner
+      const blob = await new Promise((resolve) =>
+        canvas.toBlob(resolve, "image/png")
+      );
 
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title: "Reporte de Producción — FPY",
-            text: textoCompartir,
-            files: [file],
-          });
-        } else {
-          // Fallback: descarga directa
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `reporte-produccion-${fecha}.png`;
-          a.click();
-          URL.revokeObjectURL(url);
-        }
-      }, "image/png");
+      if (!blob) throw new Error("No se pudo generar la imagen");
+
+      const file = new File([blob], `reporte-produccion-${fecha}.png`, { type: "image/png" });
+
+      // Web Share API con archivos (móviles modernos)
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: "Reporte de Producción — FPY",
+          text: textoCompartir,
+          files: [file],
+        });
+      } else if (navigator.share) {
+        // Algunos móviles soportan share pero no con archivos — compartimos solo texto + URL blob
+        const url = URL.createObjectURL(blob);
+        await navigator.share({
+          title: "Reporte de Producción — FPY",
+          text: textoCompartir,
+          url,
+        });
+        URL.revokeObjectURL(url);
+      } else {
+        // Fallback desktop: descarga directa
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement("a");
+        a.href     = url;
+        a.download = `reporte-produccion-${fecha}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
 
     } catch (err) {
-      console.error("Error al compartir:", err);
+      // AbortError = usuario canceló el share, no es un error real
+      if (err?.name !== "AbortError") {
+        console.error("Error al compartir:", err);
+      }
     } finally {
       setCompartiendo(false);
     }
   };
 
   /* ── Helpers de color ── */
-  const colorFPY = (v) => v >= 98 ? "text-green-400" : "text-red-500";
-  const colorMeta = (ok) => ok ? "text-green-400" : "text-red-500";
+  const colorFPY    = (v) => v >= 98 ? "text-green-400" : "text-red-500";
+  const colorMeta   = (ok) => ok ? "text-green-400" : "text-red-500";
 
   /* ================= RENDER ================= */
   return (
     <div className="bg-gray-800 min-h-screen">
-      <div className="px-4 pb-8 pt-2">
-        <button
-          onClick={handleCompartir}
-          disabled={compartiendo}
-          className="
-            w-full flex items-center justify-center gap-2
-            bg-gray-700 hover:bg-gray-600 active:bg-gray-900
-            border border-gray-500 hover:border-gray-400
-            text-white font-semibold py-4 rounded-xl
-            transition-all text-sm
-            disabled:opacity-50 disabled:cursor-not-allowed
-          "
-        >
-          {compartiendo ? (
-            <>
-              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-              </svg>
-              Generando imagen…
-            </>
-          ) : (
-            <>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-              Compartir reporte
-            </>
-          )}
-        </button>
-      </div>
+
       {/* ── Selector de fecha FUERA de la captura ── */}
       <div className="px-4 md:px-6 pt-4 md:pt-6">
         <input
@@ -287,7 +276,7 @@ export default function TablaFPY() {
               {fechaISO}
             </span>
             {/* Contador motores */}
-            <div className="bg-green-800 text-white text-xl md:text-3xl font-bold rounded-md px-4 py-2 flex items-center justify-center">
+            <div className="bg-green-800 text-white text-xl md:text-3xl font-bold rounded-md px-4 py-2 text-center">
               {data.Total.Liberados} Motores
             </div>
             {/* LIVE estático sin GIF */}
@@ -326,10 +315,11 @@ export default function TablaFPY() {
             <p className="text-4xl md:text-5xl font-bold text-white">
               {analizados} / {data.Total.Recuperados}
             </p>
-            <p className={`text-base mt-2 font-semibold ${porcentajeRecuperacion >= 80 ? "text-green-400"
-                : porcentajeRecuperacion >= 50 ? "text-yellow-400"
-                  : "text-red-500"
-              }`}>{porcentajeRecuperacion}%</p>
+            <p className={`text-base mt-2 font-semibold ${
+              porcentajeRecuperacion >= 80 ? "text-green-400"
+              : porcentajeRecuperacion >= 50 ? "text-yellow-400"
+              : "text-red-500"
+            }`}>{porcentajeRecuperacion}%</p>
           </div>
 
         </div>
@@ -352,9 +342,9 @@ export default function TablaFPY() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
           {[
-            { label: "Motor Test FPY", fpy: fpyMT, rechazos: data.Total.MT },
-            { label: "System Test FPY", fpy: fpyST, rechazos: data.Total.ST },
-            { label: "Final Inspection FPY", fpy: fpyFI, rechazos: data.Total.FI },
+            { label: "Motor Test FPY",       fpy: fpyMT, rechazos: data.Total.MT  },
+            { label: "System Test FPY",      fpy: fpyST, rechazos: data.Total.ST  },
+            { label: "Final Inspection FPY", fpy: fpyFI, rechazos: data.Total.FI  },
           ].map(({ label, fpy, rechazos }) => (
             <div key={label} className="bg-gray-900 p-5 rounded-xl shadow-lg text-center">
               <h2 className="text-gray-400 text-xs uppercase tracking-wide mb-1">{label}</h2>
@@ -419,7 +409,38 @@ export default function TablaFPY() {
       {/* Fin zona capturable */}
 
       {/* ── Botón compartir (fuera de la captura) ── */}
-
+      <div className="px-4 pb-8 pt-2">
+        <button
+          onClick={handleCompartir}
+          disabled={compartiendo}
+          className="
+            w-full flex items-center justify-center gap-2
+            bg-gray-700 hover:bg-gray-600 active:bg-gray-900
+            border border-gray-500 hover:border-gray-400
+            text-white font-semibold py-4 rounded-xl
+            transition-all text-sm
+            disabled:opacity-50 disabled:cursor-not-allowed
+          "
+        >
+          {compartiendo ? (
+            <>
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+              </svg>
+              Generando imagen…
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              Compartir reporte
+            </>
+          )}
+        </button>
+      </div>
 
     </div>
   );
