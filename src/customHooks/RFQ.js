@@ -1,4 +1,4 @@
-import { getFirestore, collection, query, where, getDocs, addDoc, doc, updateDoc, runTransaction, setDoc, getDoc, increment, serverTimestamp } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, addDoc, doc, updateDoc, runTransaction, setDoc, getDoc, increment, serverTimestamp, onSnapshot } from "firebase/firestore";
 
 const lineas = ["L1", "L2", "L3", "LSA"];
 
@@ -265,6 +265,54 @@ export async function addAnalizados(data) {
         return false;
 
     }
+}
+
+// ─── Agregar componente nuevo ────────────────────────────────────────
+export async function addInspectionComponent(data) {
+    const db = getFirestore();
+    const ref = collection(db, "InspectionComponents");
+    try {
+        const docRef = await addDoc(ref, {
+            ...data,
+            chars: [],
+            createdAt: serverTimestamp(),
+        });
+        return docRef.id;
+    } catch (error) {
+        alert("Error en la base de datos al crear componente: " + error);
+        return null;
+    }
+}
+
+// ─── Agregar característica a un componente (actualiza el array chars) ─
+export async function addCharacteristic(componentId, newChar, currentChars) {
+    const db = getFirestore();
+    const ref = doc(db, "InspectionComponents", componentId);
+    try {
+        await updateDoc(ref, {
+            chars: [...currentChars, newChar],
+        });
+        return true;
+    } catch (error) {
+        alert("Error en la base de datos al agregar característica: " + error);
+        return false;
+    }
+}
+
+// ─── Listener en tiempo real de todos los componentes ───────────────
+export function subscribeToComponents(callback) {
+    const db = getFirestore();
+    const ref = collection(db, "InspectionComponents");
+    return onSnapshot(
+        ref,
+        (snapshot) => {
+            const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+            callback(data);
+        },
+        (error) => {
+            alert("Error al leer componentes: " + error);
+        }
+    );
 }
 export async function createFPYDiario() {
     const db = getFirestore();

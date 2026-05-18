@@ -28,6 +28,7 @@ import FormMainBoard from "./components/RFQs/Mainboard.jsx";
 import Recibo from "./components/Incoming/Recibo.jsx";
 import NuevoRecibo from "./components/Incoming/NuevoRecibo.jsx";
 import MRB from "./components/MRB.jsx";
+import Incoming from "./components/Incoming/Incoming.jsx";
 
 function ProtectedRoute({ isAuthenticated, children }) {
   if (!isAuthenticated) {
@@ -84,6 +85,8 @@ export default function App() {
                       <Route path="/AgregarRecibo/:id" element={<NuevoRecibo />} />
                       <Route path="/AgregarRecibo" element={<NuevoRecibo />} />
                       <Route path="/MRB" element={<MRB />} />
+                      <Route path="/Incoming" element={<Incoming />} />
+
 
 
 

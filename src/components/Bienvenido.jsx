@@ -27,6 +27,7 @@ function Bienvenido() {
             "Envios",
             "JOBS",
             "Dashboard",
+            "Incoming",
             "Record",
             "Recibo"
           ]);
@@ -55,7 +56,7 @@ function Bienvenido() {
             "Record"
           ]);
           break;
-          case "8":
+        case "8":
           setApartments([
             "JOBS",
             "Dashboard",
@@ -71,9 +72,15 @@ function Bienvenido() {
             "Record"
           ]);
           break;
-                  case "6":
+        case "6":
           setApartments([
             "Recibo"
+          ]);
+          break;
+        case "10":
+          setApartments([
+            "Incoming",
+            "Dashboard",
           ]);
           break;
         default:
