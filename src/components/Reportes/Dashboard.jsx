@@ -319,6 +319,27 @@ const META_HORA = esSabado ?  7 : 19;
         </div>
 
         {/* KPI principal — 3 columnas en md, 1 columna en móvil */}
+
+
+
+
+        {/* KPI FPY — 3 columnas */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          {[
+            { label: "Motor Test FPY",       fpy: fpyMT, rechazos: data.Total.MT  },
+            { label: "System Test FPY",      fpy: fpyST, rechazos: data.Total.ST  },
+            { label: "Final Inspection FPY", fpy: fpyFI, rechazos: data.Total.FI  },
+          ].map(({ label, fpy, rechazos }) => (
+            <div key={label} className="bg-gray-900 p-5 rounded-xl shadow-lg text-center">
+              <h2 className="text-gray-400 text-xs uppercase tracking-wide mb-1">{label}</h2>
+              <p className={`text-4xl md:text-5xl font-bold ${colorFPY(fpy)}`}>{fpy}%</p>
+              <p className="text-xs text-gray-400 mt-2">Rechazos: {rechazos}</p>
+            </div>
+          ))}
+
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
           <div className="bg-gray-900 p-5 rounded-xl shadow-lg text-center">
@@ -354,38 +375,6 @@ const META_HORA = esSabado ?  7 : 19;
           </div>
 
         </div>
-
-        {/* Barra progreso */}
-        <div className="bg-gray-900 p-4 rounded-xl">
-          <div className="flex justify-between text-xs text-gray-400 mb-1">
-            <span>Adherencia</span>
-            <span>{cumplimiento}%</span>
-          </div>
-          <div className="w-full bg-gray-700 h-5 rounded-full overflow-hidden">
-            <div
-              className={`h-5 rounded-full transition-all duration-500 ${cumplimiento >= 100 ? "bg-green-500" : "bg-red-500"}`}
-              style={{ width: `${Math.min(cumplimiento, 100)}%` }}
-            />
-          </div>
-        </div>
-
-        {/* KPI FPY — 3 columnas */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-          {[
-            { label: "Motor Test FPY",       fpy: fpyMT, rechazos: data.Total.MT  },
-            { label: "System Test FPY",      fpy: fpyST, rechazos: data.Total.ST  },
-            { label: "Final Inspection FPY", fpy: fpyFI, rechazos: data.Total.FI  },
-          ].map(({ label, fpy, rechazos }) => (
-            <div key={label} className="bg-gray-900 p-5 rounded-xl shadow-lg text-center">
-              <h2 className="text-gray-400 text-xs uppercase tracking-wide mb-1">{label}</h2>
-              <p className={`text-4xl md:text-5xl font-bold ${colorFPY(fpy)}`}>{fpy}%</p>
-              <p className="text-xs text-gray-400 mt-2">Rechazos: {rechazos}</p>
-            </div>
-          ))}
-
-        </div>
-
         {/* TABLA */}
         <div className="overflow-x-auto rounded-xl">
           <table className="min-w-full bg-gray-800 rounded-xl shadow-md text-sm">
@@ -395,7 +384,7 @@ const META_HORA = esSabado ?  7 : 19;
                 <th className="px-3 py-3 text-center">MT %</th>
                 <th className="px-3 py-3 text-center">ST %</th>
                 <th className="px-3 py-3 text-center">FI %</th>
-                <th className="px-3 py-3 text-center">Liberados</th>
+                <th className="px-3 py-3 text-center">Finish Good</th>
               </tr>
             </thead>
             <tbody className="text-white">

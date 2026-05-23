@@ -1,4 +1,4 @@
-import { getFirestore, collection, query, where, getDocs, addDoc, doc, updateDoc, runTransaction, setDoc, getDoc, increment, serverTimestamp, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, addDoc, doc, updateDoc, runTransaction, setDoc, getDoc, increment, serverTimestamp, onSnapshot, arrayUnion } from "firebase/firestore";
 
 const lineas = ["L1", "L2", "L3", "LSA"];
 
@@ -129,6 +129,35 @@ export const getReciboById = async (id) => {
     return null;
   }
 };
+export async function addInspectionResult(compId, result) {
+      const db = getFirestore();
+
+  try {
+    console.log("Saving comp:", compId);
+    console.log("Data:", result);
+
+    const ref = doc(
+      db,
+      "InspectionComponents",
+      compId
+    );
+
+    await setDoc(
+      ref,
+      {
+        inspectionResults: arrayUnion(result),
+      },
+      { merge: true }
+    );
+
+    console.log("SUCCESS");
+    return true;
+
+  } catch (err) {
+    console.error("FIREBASE ERROR:", err);
+    return false;
+  }
+}
 export const updateRecibo = async (filters) => {
 
 };
