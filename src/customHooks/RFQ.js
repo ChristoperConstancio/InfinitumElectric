@@ -643,7 +643,7 @@ export async function addLiberados(data) {
         const fechaMX = getFechaMX();              // ej. 15-2-2026
         const linea = data.linea; 
         const turno = data.turno;                 // L1 | L2 | L3
-        const campoLiberados = `Liberados${linea}${turno}`;
+        const campoLiberados = `Liberados${linea}`;
 
         const fpyRef = doc(db, "FPY", fechaMX);
 
