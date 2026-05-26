@@ -13,91 +13,59 @@ function FinalStation() {
     SN_MOTOR: "",
     SN_VFD: "",
     PLEX: "",
-    JOB: jobsActivas,
+    JOB: "",
+    turno: ""
   });
 
-
-  // 🔄 Manejo de inputs
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // 💾 Guardar liberación
   const handleGuardar = async (e) => {
     e.preventDefault();
+
     const now = new Date();
+
     const fechaHoraMX = now.toLocaleString("es-MX", {
       timeZone: "America/Mexico_City",
       hour12: false
     });
 
+    const hora = now.toLocaleString("en-US", {
+      timeZone: "America/Mexico_City",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    });
 
+    const [h, m] = hora.split(":").map(Number);
+    const minutosTotales = h * 60 + m;
+
+    let turno = "Fuera de turno";
+
+    if (minutosTotales >= 450 && minutosTotales < 1020) {
+      turno = "1er Turno";
+    } else if (minutosTotales >= 1020 || minutosTotales < 120) {
+      turno = "2do Turno";
+    }
 
     try {
-      // 🔍 buscar SN_MOTOR en analizados
       const recuperado = await existeEnAnalizados(form.SN_MOTOR);
+
       const payload = {
         ...form,
         linea: lineaSeleccionada,
-        fecha: fechaHoraMX, // fecha + hora juntas
+        fecha: fechaHoraMX,
+        turno,
         recuperado: recuperado ? "Si" : "No",
       };
+
       const isOk = await addLiberados(payload);
 
-      if (isOk?.exists) {
-        setAlert({
-          type: "error",
-          message: "Este SN_CATALOG ya fue liberado",
-        });
-        return;
-      }
-      if (isOk) {
-        setAlert({
-          type: "success",
-          message: "Motor liberado correctamente",
-        });
-        const okJob = await sumarLiberadoAJOB(form.JOB);
-        if (!okJob) {
-          setAlert({
-            show: true,
-            type: "warning",
-            message: "Motor liberado, pero NO se pudo actualizar la JOB",
-          });
-          return;
-        }
-        setAlert({
-          show: true,
-          type: "success",
-          message: "Motor liberado y JOB actualizada",
-        });
-        // Limpia form
-        setForm((prev) => ({
-          ...prev,
-          SN_CATALOG: "",
-          SN_MOTOR: "",
-          SN_VFD: "",
-          PLEX: "",
-        }));
-        return;
-      }
+      console.log(isOk);
 
-
-      return true;
     } catch (error) {
-      setAlert({
-        type: "error",
-        message: "Error de conexión, avise a supervisor",
-      });
-      console.log(error)
-      return false;
+      console.log(error);
     }
-
-
   };
+const handleChange = (e) => { const { name, value } = e.target; setForm((prev) => ({ ...prev, [name]: value, })); };
+  // useEffect VA AQUÍ, fuera de handleGuardar
   useEffect(() => {
     const cargarJobs = async () => {
       const data = await getJobsActivas();
