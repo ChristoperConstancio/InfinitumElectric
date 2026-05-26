@@ -108,7 +108,6 @@ function FinalStation() {
           SN_MOTOR: "",
           SN_VFD: "",
           PLEX: "",
-          JOB: "",
           turno: "",
         });
 
