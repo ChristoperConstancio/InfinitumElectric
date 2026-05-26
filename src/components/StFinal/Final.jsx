@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
-import { addLiberados, createFPYDiario, existeEnAnalizados, getJobsActivas, sumarLiberadoAJOB } from "../../customHooks/RFQ";
+import {
+  addLiberados,
+  createFPYDiario,
+  existeEnAnalizados,
+  getJobsActivas,
+  sumarLiberadoAJOB
+} from "../../customHooks/RFQ";
 import AlertMessage from "../Alertas/AlertMessage";
 
 function FinalStation() {
   const [lineaSeleccionada, setLineaSeleccionada] = useState("");
   const [alert, setAlert] = useState(null);
   const [jobsActivas, setJobsActivas] = useState([]);
-  // OK | RETRABAJO | RECHAZADO
 
   const [form, setForm] = useState({
     SN_CATALOG: "",
@@ -17,6 +22,16 @@ function FinalStation() {
     turno: ""
   });
 
+  // Manejo de inputs
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Guardar liberación
   const handleGuardar = async (e) => {
     e.preventDefault();
 
@@ -24,28 +39,33 @@ function FinalStation() {
 
     const fechaHoraMX = now.toLocaleString("es-MX", {
       timeZone: "America/Mexico_City",
-      hour12: false
+      hour12: false,
     });
 
+    // Obtener hora de México
     const hora = now.toLocaleString("en-US", {
       timeZone: "America/Mexico_City",
       hour: "2-digit",
       minute: "2-digit",
-      hour12: false
+      hour12: false,
     });
 
     const [h, m] = hora.split(":").map(Number);
     const minutosTotales = h * 60 + m;
 
+    // Determinar turno
     let turno = "Fuera de turno";
 
     if (minutosTotales >= 450 && minutosTotales < 1020) {
-      turno = "1er Turno";
+      // 7:30 AM - 5:00 PM
+      turno = "T1";
     } else if (minutosTotales >= 1020 || minutosTotales < 120) {
-      turno = "2do Turno";
+      // 5:00 PM - 2:00 AM
+      turno = "T2";
     }
 
     try {
+      // Buscar SN_MOTOR en analizados
       const recuperado = await existeEnAnalizados(form.SN_MOTOR);
 
       const payload = {
@@ -58,14 +78,52 @@ function FinalStation() {
 
       const isOk = await addLiberados(payload);
 
-      console.log(isOk);
+      if (isOk?.exists) {
+        setAlert({
+          type: "error",
+          message: "Este SN_CATALOG ya fue liberado",
+        });
+        return;
+      }
 
+      if (isOk) {
+        const okJob = await sumarLiberadoAJOB(form.JOB);
+
+        if (!okJob) {
+          setAlert({
+            type: "warning",
+            message: "Motor liberado, pero NO se pudo actualizar la JOB",
+          });
+          return;
+        }
+
+        setAlert({
+          type: "success",
+          message: "Motor liberado y JOB actualizada",
+        });
+
+        // Limpiar formulario
+        setForm({
+          SN_CATALOG: "",
+          SN_MOTOR: "",
+          SN_VFD: "",
+          PLEX: "",
+          JOB: "",
+          turno: "",
+        });
+
+        return;
+      }
     } catch (error) {
       console.log(error);
+      setAlert({
+        type: "error",
+        message: "Error de conexión, avise a supervisor",
+      });
     }
   };
-const handleChange = (e) => { const { name, value } = e.target; setForm((prev) => ({ ...prev, [name]: value, })); };
-  // useEffect VA AQUÍ, fuera de handleGuardar
+
+  // Cargar JOBs activas
   useEffect(() => {
     const cargarJobs = async () => {
       const data = await getJobsActivas();
@@ -74,9 +132,9 @@ const handleChange = (e) => { const { name, value } = e.target; setForm((prev) =
 
     cargarJobs();
   }, []);
+
   return (
     <div className="max-w-3xl mx-auto text-white mt-10 space-y-8">
-
       {alert && (
         <AlertMessage
           type={alert.type}
@@ -106,6 +164,8 @@ const handleChange = (e) => { const { name, value } = e.target; setForm((prev) =
           <option value="L3">Línea 3</option>
           <option value="LSA">Línea SA</option>
         </select>
+
+        {/* JOB */}
         <select
           required
           name="JOB"
@@ -118,10 +178,10 @@ const handleChange = (e) => { const { name, value } = e.target; setForm((prev) =
           {jobsActivas.map((job) => (
             <option key={job.id} value={job.id}>
               {job.id}
-
             </option>
           ))}
         </select>
+
         <input
           required
           name="SN_CATALOG"
@@ -154,7 +214,7 @@ const handleChange = (e) => { const { name, value } = e.target; setForm((prev) =
           name="PLEX"
           value={form.PLEX}
           onChange={handleChange}
-          placeholder="PLEX "
+          placeholder="PLEX"
           className="w-full p-2 rounded bg-gray-800"
         />
 
