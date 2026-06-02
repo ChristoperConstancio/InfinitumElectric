@@ -236,43 +236,7 @@ function Recibo() {
 
             {/* Filtros — fila 2 */}
             <div className="px-12 py-4 grid grid-cols-5 gap-4">
-                <select
-                    name="status"
-                    value={filters.status}
-                    onChange={handleChange}
-                    className="bg-gray-800 border border-gray-600 p-2 rounded text-white"
-                >
-                    <option value="">Todos los status</option>
-                    <option value="pendiente">Pendiente</option>
-                    <option value="completado">Completado</option>
-                    <option value="capturado">Capturado</option>
-                    <option value="transferencia">Transferencia</option>
-                    <option value="confirmadodiscrepancia">Confirmado Discrepancia</option>
-                    <option value="confirmadopdtePO">Confirmado Pdte PO</option>
-                    <option value="noconfirmado">No confirmado</option>
-                </select>
-
-                <select
-                    name="tipoMaterial"
-                    value={filters.tipoMaterial}
-                    onChange={handleChange}
-                    className="bg-gray-800 border border-gray-600 p-2 rounded text-white"
-                >
-                    <option value="">Todos los tipos</option>
-                    <option value="materia_prima">Materia Prima</option>
-                    <option value="producto_terminado">Producto Terminado</option>
-                    <option value="consumible">Consumible</option>
-                    <option value="herramienta">Herramienta</option>
-                </select>
-
-                <input
-                    type="text"
-                    name="invoice"
-                    placeholder="Factura / Invoice"
-                    value={filters.invoice}
-                    onChange={handleChange}
-                    className="bg-gray-800 border border-gray-600 p-2 rounded text-white"
-                />
+             
 
                 <button
                     onClick={handleSearch}

@@ -153,11 +153,14 @@ function RegistroRechazos() {
             <option value="">Selecciona estación...</option>
             <option value="L1ST">Linea 1 System Test</option>
             <option value="L1MT">Linea 1 Motor Test</option>
+            <option value="HTL1">Linea 1 Hipot</option>
             <option value="L1FI">Linea 1 Final Inspection</option>
             <option value="L2ST">Linea 2 System Test</option>
+            <option value="HTL2">Linea 2 Hipot</option>
             <option value="L2MT">Linea 2 Motor Test</option>
             <option value="L2FI">Linea 2 Final Inspection</option>
             <option value="L3ST">Linea 3 System Test</option>
+            <option value="HTL3">Linea 3 Hipot</option>
             <option value="L3MT">Linea 3 Motor Test</option>
             <option value="L3FI">Linea 3 Final Inspection</option>
             <option value="LSAST">Linea SA System Test</option>

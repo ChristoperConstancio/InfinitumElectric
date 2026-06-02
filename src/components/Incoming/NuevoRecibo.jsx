@@ -121,32 +121,11 @@ function NuevoRecibo() {
 
       <form onSubmit={handleSubmit} className="px-12 py-6 grid grid-cols-2 gap-6">
 
-        <div>
-          <label className="block text-sm mb-1">Número de recibo</label>
-          <input name="numeroRecibo" value={form.numeroRecibo} onChange={handleChange} placeholder="Número de recibo" className="w-full bg-gray-800 p-2 rounded" />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Numero factura</label>
-          <input name="invoice" value={form.invoice} onChange={handleChange} placeholder="Numero factura" className="w-full bg-gray-800 p-2 rounded" />
-        </div>
+    
 
-        <div>
-          <label className="block text-sm mb-1">Fecha de factura</label>
-          <input type="date" name="invoiceDate" value={form.invoiceDate} onChange={handleChange} className="w-full bg-gray-800 border border-gray-600 p-2 rounded" />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Fecha de llegada</label>
-          <input type="date" name="arrivalDate" value={form.arrivalDate} onChange={handleChange} className="w-full bg-gray-800 border border-gray-600 p-2 rounded" />
-        </div>
 
-        <div>
-          <label className="block text-sm mb-1">ID Trailer</label>
-          <input name="idTrailer" value={form.idTrailer} onChange={handleChange} placeholder="ID Trailer" className="w-full bg-gray-800 p-2 rounded" />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Packing List</label>
-          <input name="packingList" value={form.packingList} onChange={handleChange} placeholder="Packing List" className="w-full bg-gray-800 p-2 rounded" />
-        </div>
+      
+       
 
         <div>
           <label className="block text-sm mb-1">Part No</label>
@@ -155,15 +134,6 @@ function NuevoRecibo() {
         <div>
           <label className="block text-sm mb-1">Rev</label>
           <input name="rev" value={form.rev} onChange={handleChange} placeholder="Rev" className="w-full bg-gray-800 p-2 rounded" />
-        </div>
-
-        <div>
-          <label className="block text-sm mb-1">U/M</label>
-          <input name="um" value={form.um} onChange={handleChange} placeholder="U/M" className="w-full bg-gray-800 p-2 rounded" />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Qty Factura</label>
-          <input type="number" name="qtyInvoice" value={form.qtyInvoice} onChange={handleChange} placeholder="Qty Factura" className="w-full bg-gray-800 p-2 rounded" />
         </div>
 
         <div>
@@ -206,56 +176,8 @@ function NuevoRecibo() {
         </div>
 
         <div>
-          <label className="block text-sm mb-1">Dias diferencia</label>
-          <input value={diasDiferencia} readOnly placeholder="Dias diferencia" className="w-full bg-gray-700 p-2 rounded" />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Status</label>
-          <select name="status" value={form.status} onChange={handleChange} className="w-full bg-gray-800 p-2 rounded">
-            <option value="pendiente">Pendiente</option>
-            <option value="completado">Completado</option>
-            <option value="capturado">Capturado</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm mb-1">Tipo Material</label>
-          <select name="tipoMaterial" value={form.tipoMaterial} onChange={handleChange} className="w-full bg-gray-800 p-2 rounded">
-            <option value="materia_prima">Materia Prima Temporal</option>
-            <option value="materia_prima_definitiva">Materia Prima Definitiva</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Confirmación</label>
-          <select name="confirmacion" value={form.confirmacion} onChange={handleChange} className="w-full bg-gray-800 p-2 rounded">
-            <option value="">-- Confirmación --</option>
-            <option value="confirmado">Confirmado</option>
-            <option value="confirmadoDiscrepancia">Confirmado con Discrepancia</option>
-            <option value="confirmadoPendPO">Confirmado con Pend. de PO</option>
-            <option value="noConfirmado">No Confirmado</option>
-          </select>
-        </div>
-
-
-
-        {/* ✅ NUEVO - Discrepancia */}
-        <div>
-          <label className="block text-sm mb-1">Discrepancia</label>
-          <select name="discrepancia" value={form.discrepancia} onChange={handleChange} className="w-full bg-gray-800 p-2 rounded">
-            <option value="">-- Discrepancia --</option>
-            <option value="discrepancia">Discrepancia</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="sinAccionPendiente">Sin Acción Pendiente</option>
-          </select>
-        </div>
-
-        <div>
           <label className="block text-sm mb-1">Persona que recibe</label>
           <input value={form.recibe} name="recibe" placeholder="Persona que recibe" onChange={handleChange} className="w-full bg-gray-800 p-2 rounded" />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Materialista</label>
-          <input value={form.materialista} readOnly className="w-full bg-gray-700 p-2 rounded" />
         </div>
 
         {/* BOTONES */}
